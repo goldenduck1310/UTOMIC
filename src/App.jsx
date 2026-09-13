@@ -28,7 +28,7 @@ function Reveal({ children, className = '' }) {
 
 function Navigation() {
   const [open, setOpen] = useState(false)
-  const links = [['Home','#home'],['About','#about'],['Services','#services'],['Insights','#insights'],['Contact','#contact']]
+  const links = [['Home','#home'],['About','#about'],['Services','#services']]
   useEffect(() => {
     document.body.classList.toggle('menu-open', open)
     return () => document.body.classList.remove('menu-open')
@@ -41,7 +41,7 @@ function Navigation() {
         <button className="menu-button" aria-expanded={open} aria-controls="site-menu" onClick={() => setOpen(!open)}>
           <span>{open ? 'Close' : 'Menu'}</span><i /><i />
         </button>
-        <Button href="#contact">Contact us</Button>
+        <Button href="#contact">Get in touch</Button>
       </div>
     </header>
     <div id="site-menu" className={`menu-panel ${open ? 'open' : ''}`} aria-hidden={!open}>
@@ -67,23 +67,104 @@ function Hero() {
   </section>
 }
 
-function About() {
-  return <section id="about" className="section light-section about">
-    <div className="container">
-      <Reveal className="section-heading split-heading">
-        <div><SectionTitle>Who we are</SectionTitle><h2>We design AI systems that turn complexity into clear, scalable digital experiences.</h2></div>
-        <Button href="#services">Explore services</Button>
-      </Reveal>
-      <div className="about-grid">
-        <div className="orbital-metric">
-          <div className="orbit orbit-a" /><div className="orbit orbit-b" /><div className="orbit-dot" />
-          <span>AI</span>
-        </div>
-        <div className="about-note">Intelligence designed around real workflows, useful interfaces and long-term adaptability.</div>
-        <Reveal className="metric-card"><strong>WEB</strong><p>Modern applications and premium digital experiences.</p></Reveal>
-      </div>
+const AtomIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="24" rx="19" ry="8"/><ellipse cx="24" cy="24" rx="19" ry="8" transform="rotate(60 24 24)"/><ellipse cx="24" cy="24" rx="19" ry="8" transform="rotate(120 24 24)"/><circle cx="24" cy="24" r="3"/></svg>
+const LayersIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="m24 6 17 10-17 10L7 16 24 6Z"/><path d="m7 24 17 10 17-10"/><path d="m7 32 17 10 17-10"/></svg>
+const NetworkIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="5"/><circle cx="24" cy="6" r="3"/><circle cx="24" cy="42" r="3"/><circle cx="6" cy="24" r="3"/><circle cx="42" cy="24" r="3"/><circle cx="11" cy="11" r="3"/><circle cx="37" cy="37" r="3"/><path d="M24 19V9m0 30V29M19 24H9m30 0H29M20.5 20.5 13 13m14.5 14.5L35 35"/></svg>
+const StackIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="m24 5 19 10-19 10L5 15 24 5Z"/><path d="m5 23 19 10 19-10"/><path d="m5 31 19 10 19-10"/></svg>
+const BoltIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M28 3 10 27h13l-3 18 18-25H25l3-17Z"/></svg>
+
+function CapabilityCard({ id, icon, title, description, tags, details, className = '' }) {
+  const [expanded, setExpanded] = useState(false)
+  return <article className={`utomic-capability-card ${className}`}>
+    <div className="utomic-card-icon">{icon}</div>
+    <div className="utomic-card-copy">
+      <h3><span>{title[0]}</span><span>{title[1]}</span></h3>
+      <p>{description}</p>
     </div>
-  </section>
+    <button className="utomic-card-toggle" type="button" aria-label={`${expanded ? 'Hide' : 'Show'} ${title.join(' ')} capabilities`} aria-expanded={expanded} aria-controls={`${id}-details`} onClick={() => setExpanded(value => !value)}><Arrow /></button>
+    <div id={`${id}-details`} className={`utomic-card-details ${expanded ? 'is-open' : ''}`} aria-hidden={!expanded}>
+      <div>{details.map(item => <span key={item}>{item}</span>)}</div>
+    </div>
+    <div className="utomic-card-tags">{tags.map(tag => <span key={tag}>{tag}</span>)}</div>
+  </article>
+}
+
+function VideoModal({ open, onClose, triggerRef }) {
+  const dialogRef = useRef(null)
+  const closeRef = useRef(null)
+  const videoRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeRef.current?.focus()
+    const handleKeyDown = event => {
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); return }
+      if (event.key !== 'Tab' || !dialogRef.current) return
+      const focusable = [...dialogRef.current.querySelectorAll('button, video, [href], [tabindex]:not([tabindex="-1"])')]
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
+      videoRef.current?.pause()
+      triggerRef.current?.focus()
+    }
+  }, [open, onClose, triggerRef])
+
+  if (!open) return null
+  return <div className="video-modal" role="presentation" onClick={event => { if (event.target === event.currentTarget) onClose() }}>
+    <div className="video-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="overview-title" ref={dialogRef}>
+      <div className="video-modal-top"><h2 id="overview-title">UTOMIC overview</h2><button ref={closeRef} type="button" onClick={onClose} aria-label="Close overview video">Close <span aria-hidden="true">×</span></button></div>
+      <video ref={videoRef} src={`${A}utomic-overview.mp4`} controls playsInline preload="metadata">Your browser does not support HTML5 video.</video>
+    </div>
+  </div>
+}
+
+function About() {
+  const [videoOpen, setVideoOpen] = useState(false)
+  const watchRef = useRef(null)
+  return <>
+    <section id="about" className="section light-section about">
+      <div className="container">
+        <Reveal className="utomic-about-shell">
+          <div className="utomic-about-main">
+            <div className="utomic-about-copy">
+              <div className="utomic-about-label">AI SYSTEMS &amp; MODERN WEB APPS</div>
+              <h2><span>We design AI systems</span><span>for scalable <em>digital experiences.</em></span></h2>
+              <p>Intelligent systems, thoughtful interfaces and modern<br className="desktop-break"/> applications designed around real workflows.</p>
+              <div className="utomic-about-actions">
+                <button ref={watchRef} className="watch-overview" type="button" onClick={() => setVideoOpen(true)}><i aria-hidden="true">▶</i><span>Watch overview</span></button>
+                <a className="explore-services" href="#services"><span>Explore services</span><b aria-hidden="true">→</b></a>
+              </div>
+            </div>
+            <div className="utomic-about-visual" aria-label="UTOMIC AI and modern web capabilities">
+              <div className="utomic-liquid-art" aria-hidden="true">
+                <i className="liquid liquid-one"/><i className="liquid liquid-two"/><i className="liquid liquid-three"/><i className="liquid liquid-four"/>
+                <svg className="utomic-orbits" viewBox="0 0 760 650"><ellipse cx="380" cy="325" rx="335" ry="150"/><ellipse cx="380" cy="325" rx="300" ry="210" transform="rotate(-24 380 325)"/><path d="M63 424C168 181 516 76 704 283"/></svg>
+              </div>
+              <div className="utomic-capability-cards">
+                <CapabilityCard id="ai-systems" className="ai-card" icon={<AtomIcon/>} title={['AI','Systems']} description="Intelligence designed around real workflows, useful interfaces and long-term adaptability." tags={['AI Automation','Intelligent Workflows','AI Integrations']} details={['AI Automation','Workflow Intelligence','AI Integrations']}/>
+                <CapabilityCard id="modern-web-apps" className="web-card" icon={<LayersIcon/>} title={['Modern','Web Apps']} description="Modern applications and premium digital experiences built for clarity, speed and scalability." tags={['Web Applications','Digital Experiences','Responsive Systems']} details={['Responsive Development','Modern Interfaces','Scalable Architecture']}/>
+              </div>
+            </div>
+          </div>
+          <div className="utomic-bottom-capabilities">
+            <article><NetworkIcon/><div><strong>AI Automation</strong><span>Smarter workflows</span></div></article>
+            <article><StackIcon/><div><strong>Modern Web Apps</strong><span>Scalable experiences</span></div></article>
+            <article><BoltIcon/><div><strong>Future Ready</strong><span>Built for what’s next</span></div></article>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+    <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} triggerRef={watchRef}/>
+  </>
 }
 
 function CapabilityTicker() {
@@ -133,14 +214,63 @@ function Services() {
   </section>
 }
 
+const SearchIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="21" cy="21" r="12"/><path d="m30 30 11 11"/></svg>
+const CodeIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="m17 13-10 11 10 11M31 13l10 11-10 11M28 7l-8 34"/></svg>
+const GrowthIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 39V28h7v11M20 39V20h7v19M32 39V10h7v29M6 39h36"/></svg>
+
+function WorkCard({ number, title, icon, items, details }) {
+  const [expanded, setExpanded] = useState(false)
+  const detailId = `work-${title.toLowerCase()}-details`
+  return <article id={`work-${title.toLowerCase()}`} className={`work-card work-card-${number}`}>
+    <div className="work-card-top"><span>{number}</span><div className="work-card-icon">{icon}</div></div>
+    <h3>{title}</h3>
+    <div className="work-card-line"/>
+    <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>
+    <button type="button" className="work-card-toggle" aria-label={`${expanded ? 'Hide' : 'Show'} ${title.toLowerCase()} details`} aria-expanded={expanded} aria-controls={detailId} onClick={() => setExpanded(value => !value)}><Arrow/></button>
+    <div id={detailId} className={`work-card-details ${expanded ? 'is-open' : ''}`} aria-hidden={!expanded}><div>{details.map(detail => <span key={detail}>{detail}</span>)}</div></div>
+  </article>
+}
+
+function WorkPortal() {
+  return <div className="work-portal" role="img" aria-label="UTOMIC ideas to impact visual">
+    <svg className="portal-orbits" viewBox="0 0 520 720" aria-hidden="true"><ellipse cx="255" cy="310" rx="212" ry="94"/><ellipse cx="255" cy="310" rx="250" ry="126" transform="rotate(63 255 310)"/><path d="M24 515C92 155 385 32 494 304"/></svg>
+    <div className="portal-halo" aria-hidden="true"/>
+    <div className="portal-monolith">
+      <strong>UTOMIC</strong>
+      <span>IDEAS<br/>SYSTEMS<br/>AUTOMATION<br/>GROWTH</span>
+      <i aria-hidden="true"/>
+    </div>
+    <svg className="portal-terrain" viewBox="0 0 620 370" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="terrainFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#05050b"/><stop offset=".56" stopColor="#171126"/><stop offset="1" stopColor="#08070f"/></linearGradient><linearGradient id="terrainEdge" x1="0" y1="0" x2="1" y2="0"><stop stopColor="#31245f"/><stop offset=".55" stopColor="#c0a1ff"/><stop offset="1" stopColor="#52349c"/></linearGradient></defs>
+      <path d="M0 284 44 249 81 260 121 201 157 215 209 137 248 167 289 91 325 151 370 118 421 190 466 166 519 228 559 213 620 259V370H0Z" fill="url(#terrainFill)"/>
+      <path d="M0 284 44 249 81 260 121 201 157 215 209 137 248 167 289 91 325 151 370 118 421 190 466 166 519 228 559 213 620 259" fill="none" stroke="url(#terrainEdge)" strokeWidth="2"/>
+      <path d="m121 201 86 65 82-175 50 164 82-65 45 121M209 137l39 30 41-76M370 118l51 72 45-24" fill="none" stroke="rgba(154,122,226,.18)"/>
+    </svg>
+    <div className="portal-reflection" aria-hidden="true"/>
+  </div>
+}
+
+const workSteps = [
+  { number:'01', title:'DISCOVER', icon:<SearchIcon/>, items:['Requirements analysis','Workflow discovery','Goals and opportunities'], details:['Requirements mapping','Workflow review','Opportunity planning'] },
+  { number:'02', title:'DESIGN', icon:<LayersIcon/>, items:['UX / UI design','System architecture','AI strategy'], details:['Interface direction','System architecture','AI workflow planning'] },
+  { number:'03', title:'BUILD', icon:<CodeIcon/>, items:['AI integration','Modern web development','Testing and deployment'], details:['Development','Integrations','Testing'] },
+  { number:'04', title:'EVOLVE', icon:<GrowthIcon/>, items:['Performance optimization','Feature expansion','Ongoing support'], details:['Optimization','Feature expansion','Long-term improvement'] }
+]
+
 function Pricing() {
-  return <section className="section pricing light-section">
+  return <section id="how-we-work" className="section how-we-work dark-section">
     <div className="container">
-      <Reveal className="section-heading split-heading"><div><SectionTitle>Engagement</SectionTitle><h2>Built around the scope—not a template.</h2></div><p>Every engagement begins with the requirements, constraints and outcome. Clear scope first; a tailored quote follows.</p></Reveal>
-      <div className="pricing-grid">
-        <article className="price-card price-card-dark"><div className="price-top"><span>01</span><b>Focused build</b></div><h3>CUSTOM<br/>ENGAGEMENT</h3><ul><li>Defined product scope</li><li>AI, automation or web build</li><li>Responsive interface system</li><li>Delivery and handover</li></ul><Button light href="mailto:sheehansheehan120@gmail.com?subject=UTOMIC%20Custom%20Engagement">Discuss the scope</Button></article>
-        <article className="price-card price-card-blue"><div className="price-top"><span>02</span><b>Tailored system</b></div><h3>CONTACT<br/>FOR QUOTE</h3><ul><li>Requirements discovery</li><li>Custom architecture</li><li>Scalable implementation</li><li>Ongoing evolution options</li></ul><Button light href="#contact">Start a conversation</Button></article>
-      </div>
+      <Reveal className="how-work-inner">
+        <div className="how-work-intro">
+          <div className="how-work-label"><i/>HOW WE WORK</div>
+          <h2><span>From ideas</span><span>to <em>real impact.</em></span></h2>
+          <p>A clear, focused process for turning your<br className="desktop-break"/> requirements into intelligent, scalable<br className="desktop-break"/> digital products.</p>
+        </div>
+        <WorkPortal/>
+        <div className="work-card-grid">{workSteps.map(step => <WorkCard key={step.number} {...step}/>)}</div>
+        <div className="work-detail"><i/><p>IDEAS<br/>SYSTEMS<br/>REAL IMPACT</p></div>
+        <div className="work-flow" aria-label="Workflow: Idea to Design to Build to Evolve"><span>IDEA</span><b>→</b><span>DESIGN</span><b>→</b><span>BUILD</span><b>→</b><span>EVOLVE</span></div>
+      </Reveal>
     </div>
   </section>
 }
@@ -209,7 +339,7 @@ function Footer() {
       <Reveal className="footer-cta"><SectionTitle light>Start something intelligent</SectionTitle><h2>BUILD WHAT SCALES<br/>BEYOND LIMITS</h2><div><p>Create smarter systems, modern digital experiences and scalable technology designed for long-term growth.</p><Button light href="mailto:sheehansheehan120@gmail.com?subject=Let%27s%20build%20with%20UTOMIC">Let's start today</Button></div></Reveal>
       <div className="footer-main">
         <div><a className="brand brand-footer" href="#home"><span className="brand-mark">U</span>UTOMIC</a><p>AI SYSTEMS &amp; MODERN WEB APPS</p></div>
-        <nav>{['Home','About','Services','Insights','Contact'].map(x=><a key={x} href={`#${x.toLowerCase()}`}>{x}</a>)}</nav>
+        <nav>{['Home','About','Services'].map(x=><a key={x} href={`#${x.toLowerCase()}`}>{x}</a>)}</nav>
         <div className="contact-list"><span>GET IN TOUCH</span><a href="mailto:sheehansheehan120@gmail.com">sheehansheehan120@gmail.com</a><a href="https://wa.me/94706610373" target="_blank" rel="noreferrer">070 661 0373</a><a href="https://instagram.com/shehan66629" target="_blank" rel="noreferrer">@shehan66629</a></div>
       </div>
       <div className="footer-word">UTOMIC</div>

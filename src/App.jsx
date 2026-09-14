@@ -275,16 +275,111 @@ function Pricing() {
   </section>
 }
 
-function Why() {
-  return <section className="section facts light-section">
+const advisorWelcome = "Hi, I’m the UTOMIC AI Advisor. Ask me anything about AI systems, automation or modern web apps."
+
+const advisorTime = () => new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })
+const HeartIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 39 8.7 24.4C1.1 16.6 6.4 7 15 7c4.4 0 7.3 2.5 9 5.3C25.7 9.5 28.7 7 33 7c8.6 0 13.9 9.6 6.3 17.4L24 39Z"/></svg>
+const AdvisorBotIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="9" y="13" width="30" height="25" rx="8"/><path d="M24 13V7m-11 17H6m36 0h-7M17 30h14"/><circle cx="18" cy="24" r="2"/><circle cx="30" cy="24" r="2"/><circle cx="24" cy="6" r="2"/></svg>
+const AdvisorUserIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="17" r="8"/><path d="M10 41c1.5-9 7-14 14-14s12.5 5 14 14H10Z"/></svg>
+const PaperPlaneIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="m7 23 34-15-10 32-8-12-16-5Z"/><path d="m23 28 18-20"/></svg>
+const MicrophoneIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="17" y="5" width="14" height="25" rx="7"/><path d="M11 23c0 8 5 13 13 13s13-5 13-13M24 36v7m-7 0h14"/></svg>
+
+function AdvisorBrowserFrame() {
+  return <div className="advisor-browser" aria-hidden="true">
+    <div className="browser-left"><span className="traffic red"/><span className="traffic yellow"/><span className="traffic green"/><i className="browser-sidebar">▣</i><i>‹</i><i>›</i></div>
+    <div className="browser-address"><span>⌕</span><strong>▣&nbsp; utomic.com</strong><i>↻</i></div>
+    <div className="browser-right"><i>⇧</i><i>＋</i><i>▣</i></div>
+  </div>
+}
+
+function AIAdvisor() {
+  const [messages, setMessages] = useState(() => [{ id:'welcome', role:'assistant', content:advisorWelcome, timestamp:advisorTime() }])
+  const [draft, setDraft] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
+  const [retryMessages, setRetryMessages] = useState(null)
+  const feedRef = useRef(null)
+
+  useEffect(() => {
+    const feed = feedRef.current
+    if (feed) feed.scrollTo({ top:feed.scrollHeight, behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }, [messages, sending])
+
+  const requestConversation = async nextMessages => {
+    if (sending) return
+    setError('')
+    setRetryMessages(null)
+    setSending(true)
+    try {
+      const response = await fetch('/api/chat', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ messages:nextMessages.map(({ role, content:messageContent }) => ({ role, content:messageContent })) })
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || !data.message) throw new Error('request-failed')
+      setMessages(current => [...current, { id:`assistant-${Date.now()}`, role:'assistant', content:data.message, timestamp:advisorTime() }])
+    } catch {
+      setError('UTOMIC AI couldn’t respond right now. Please try again.')
+      setRetryMessages(nextMessages)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const sendMessage = () => {
+    const content = draft.trim()
+    if (!content || sending) return
+    const userMessage = { id:`user-${Date.now()}`, role:'user', content, timestamp:advisorTime() }
+    const nextMessages = [...messages, userMessage]
+    setMessages(nextMessages)
+    setDraft('')
+    requestConversation(nextMessages)
+  }
+
+  const handleKeyDown = event => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      sendMessage()
+    }
+  }
+
+  return <section id="ai-advisor" className="section ai-advisor ai-advisor-final dark-section">
+    <AdvisorBrowserFrame/>
+    <div className="advisor-grid" aria-hidden="true"/><div className="advisor-glow" aria-hidden="true"/><div className="advisor-stars" aria-hidden="true"/>
+    <div className="advisor-social" aria-hidden="true"><span>◒</span><span>in</span><span>◎</span></div>
+    <div className="advisor-indicators" aria-hidden="true"><span>✦</span><i/><span>Ⅱ</span><i/><span>●</span></div>
     <div className="container">
-      <Reveal className="section-heading split-heading"><div><SectionTitle>Why choose us</SectionTitle><h2>Designed to stay useful as your world changes.</h2></div><Button href="#contact">Start a conversation</Button></Reveal>
-      <div className="facts-grid">
-        <article><b>AI</b><h3>Smarter workflows</h3><p>Systems arranged around the work that actually needs to happen.</p></article>
-        <article className="fact-visual"><img src={`${A}pLuUcaj4KkrCFvFJLTXFnuPlFOo.png`} alt="Digital interface visual" /></article>
-        <article><b>24/7</b><h3>Responsive experiences</h3><p>Reliable access designed for desktop, tablet and mobile.</p></article>
-        <article><b>WEB</b><h3>Scalable digital systems</h3><p>Solid foundations that support continued growth and iteration.</p></article>
-      </div>
+      <Reveal className="advisor-inner">
+        <div className="advisor-orb" aria-hidden="true"><HeartIcon/></div>
+        <div className="advisor-heading">
+          <h2><span>Your <em>Personal</em></span><span>AI Advisor</span></h2>
+          <p>Ask UTOMIC anything about AI systems, automation, digital products and modern web experiences.</p>
+        </div>
+        <div className="advisor-beta" aria-label="UTOMIC beta registration preview">
+          <label className="sr-only" htmlFor="beta-email">Email address</label>
+          <input id="beta-email" type="email" placeholder="Email address" autoComplete="email"/>
+          <button type="button" disabled title="Beta registration is not available yet">Join Beta</button>
+        </div>
+        <div className="advisor-chat" aria-label="Chat with the UTOMIC AI Advisor">
+          <div className="advisor-messages" ref={feedRef} role="log" aria-live="polite" aria-relevant="additions">
+            {messages.map(message => <div key={message.id} className={`advisor-message ${message.role}`}>
+              <span className="advisor-avatar" aria-hidden="true">{message.role === 'assistant' ? <AdvisorBotIcon/> : <AdvisorUserIcon/>}</span>
+              <div className="advisor-message-body"><div className="advisor-bubble"><p>{message.content}</p></div><time>{message.timestamp}</time></div>
+            </div>)}
+            {sending && <div className="advisor-message assistant advisor-thinking"><span className="advisor-avatar" aria-hidden="true"><AdvisorBotIcon/></span><div className="advisor-message-body"><div className="advisor-bubble"><p><span>UTOMIC is thinking…</span><i/><i/><i/></p></div></div></div>}
+            {error && <div className="advisor-message assistant advisor-failure" role="alert"><span className="advisor-avatar" aria-hidden="true"><AdvisorBotIcon/></span><div className="advisor-message-body"><div className="advisor-bubble"><p>{error}</p><button type="button" onClick={() => retryMessages && requestConversation(retryMessages)} disabled={sending || !retryMessages}>Try again</button></div></div></div>}
+          </div>
+          <div className="advisor-composer">
+            <label className="sr-only" htmlFor="advisor-input">Ask UTOMIC anything</label>
+            <span className="composer-plus" aria-hidden="true">+</span>
+            <textarea id="advisor-input" value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={handleKeyDown} placeholder="Ask UTOMIC anything…" rows="1" maxLength="2000" disabled={sending}/>
+            <span className="composer-mic" aria-hidden="true"><MicrophoneIcon/></span>
+            <button type="button" onClick={sendMessage} disabled={sending || !draft.trim()} aria-label="Send message"><PaperPlaneIcon/></button>
+          </div>
+          <p className="advisor-hint">ENTER TO SEND <i/> SHIFT + ENTER FOR A NEW LINE</p>
+        </div>
+      </Reveal>
     </div>
   </section>
 }
@@ -349,5 +444,5 @@ function Footer() {
 }
 
 export default function App() {
-  return <><Navigation/><main><Hero/><About/><CapabilityTicker/><Systems/><Services/><Pricing/><Why/><AIControl/><Approach/><Insights/></main><Footer/></>
+  return <><Navigation/><main><Hero/><About/><CapabilityTicker/><Systems/><Services/><Pricing/><AIAdvisor/><AIControl/><Approach/><Insights/></main><Footer/></>
 }

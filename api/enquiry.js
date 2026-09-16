@@ -2,9 +2,8 @@ const recipient = 'sheehansheehan120@gmail.com'
 
 const clean = (value, limit = 4000) => String(value || '').trim().replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, limit)
 
-const allowedServices = new Set(['AI SYSTEMS','MODERN WEB APPS','DIGITAL EXPERIENCES'])
-const allowedStages = new Set(['Idea','Planning','Existing Product','Rebuild / Improvement'])
-const allowedContactMethods = new Set(['Email','WhatsApp'])
+const allowedServices = new Set(['AI SYSTEM','MODERN WEB APP','PREMIUM WEBSITE','AI AUTOMATION','DIGITAL EXPERIENCE','CUSTOM DIGITAL SYSTEM'])
+const allowedScopes = new Set(['SMALL PROJECT','GROWTH PROJECT','LARGE / CUSTOM PROJECT','NOT SURE YET'])
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
@@ -21,18 +20,17 @@ export default async function handler(request, response) {
   const name = clean(body.name, 120)
   const email = clean(body.email, 254)
   const phone = clean(body.phone, 80)
-  const company = clean(body.company, 160)
+  const projectName = clean(body.projectName, 160)
   const description = clean(body.description, 5000)
-  const website = clean(body.website, 500)
-  const stage = clean(body.stage, 100)
-  const contactMethod = clean(body.contactMethod, 40)
+  const goal = clean(body.goal, 1500)
+  const scope = clean(body.scope, 80)
 
-  if (!allowedServices.has(service) || !allowedStages.has(stage) || !allowedContactMethods.has(contactMethod) || !name || !description || !/^\S+@\S+\.\S+$/.test(email)) {
+  if (!allowedServices.has(service) || !allowedScopes.has(scope) || !projectName || !name || !description || !goal || !/^\S+@\S+\.\S+$/.test(email)) {
     return response.status(400).json({ error: 'Please complete the required project details.' })
   }
 
   const submittedAt = new Intl.DateTimeFormat('en-GB', { dateStyle:'full', timeStyle:'long', timeZone:'Asia/Colombo' }).format(new Date())
-  const text = `NEW UTOMIC PROJECT REQUEST\n\nName: ${name}\nEmail: ${email}\nPhone / WhatsApp: ${phone || 'Not provided'}\nCompany / Brand: ${company || 'Not provided'}\nProject Area: ${service}\nProject Stage: ${stage}\nWebsite: ${website || 'Not provided'}\nPreferred Contact: ${contactMethod}\n\nProject Description:\n${description}\n\nSubmission date/time: ${submittedAt}`
+  const text = `NEW UTOMIC PROJECT ENQUIRY\n\nService: ${service}\nProject / Company: ${projectName}\nScope: ${scope}\n\nProject Description:\n${description}\n\nPrimary Goal:\n${goal}\n\nContact Name: ${name}\nEmail: ${email}\nWhatsApp / Phone: ${phone || 'Not provided'}\n\nSubmission date/time: ${submittedAt}`
 
   try {
     const emailResponse = await fetch('https://api.resend.com/emails', {

@@ -42,12 +42,18 @@ function Navigation({ onStartProject }) {
   </>
 }
 
-function Hero() {
+function Hero({ onStartProject }) {
   return <section id="home" className="hero">
     <div className="hero-grain" />
-    <img className="hero-head" src={`${A}P4BoyuwkljLUDId9rVUDZ9kew6I.png`} alt="Futuristic blue cognitive AI profile" />
+    <img className="hero-head" src={`${A}P4BoyuwkljLUDId9rVUDZ9kew6I.png`} alt="Futuristic blue cognitive AI profile" fetchPriority="high" decoding="async" />
     <div className="hero-inner">
-      <p className="hero-copy">Empowering businesses through intelligent automation and scalable AI-driven digital systems.</p>
+      <div className="hero-message">
+        <p className="hero-copy">We design and build intelligent AI systems, modern web apps and digital experiences.</p>
+        <div className="hero-actions">
+          <ProjectButton light className="hero-project" onClick={event => onStartProject(null, event.currentTarget)}/>
+          <a href="#services" className="hero-services">EXPLORE SERVICES <Arrow /></a>
+        </div>
+      </div>
       <a href="#systems" className="glass-card">
         <p>Explore the systems and digital capabilities we build.</p>
         <div><strong>AI + WEB</strong><Arrow /></div>
@@ -174,11 +180,11 @@ function Systems() {
   const move = dir => track.current?.scrollBy({left: dir * Math.min(track.current.clientWidth * .78, 980), behavior:'smooth'})
   return <section id="systems" className="section systems light-section">
     <div className="container">
-      <Reveal className="section-heading split-heading"><div><SectionTitle>Selected systems</SectionTitle><h2>Digital capabilities built for meaningful impact.</h2></div><div className="carousel-nav"><button onClick={()=>move(-1)} aria-label="Previous system">←</button><button onClick={()=>move(1)} aria-label="Next system">→</button></div></Reveal>
+      <Reveal className="section-heading split-heading"><div><SectionTitle>Selected systems</SectionTitle><h2>Digital capabilities built for meaningful impact.</h2></div><div className="carousel-nav"><button type="button" onClick={()=>move(-1)} aria-label="Previous system">←</button><button type="button" onClick={()=>move(1)} aria-label="Next system">→</button></div></Reveal>
     </div>
     <div ref={track} className="system-track">
       {systems.map((s,i)=><article className="system-card" key={s.title}>
-        <div className="system-image"><img src={`${A}${s.image}`} alt="" /></div>
+        <div className="system-image"><img src={`${A}${s.image}`} alt="" loading="lazy" decoding="async" /></div>
         <div className="card-bottom"><div><small>0{i+1}</small><h3>{s.title}</h3></div><div className="tags">{s.tags.map(t=><span key={t}>{t}</span>)}</div></div>
       </article>)}
     </div>
@@ -186,41 +192,47 @@ function Systems() {
 }
 
 const services = [
-  ['AI SYSTEMS','Intelligent digital systems designed around workflows, automation and real-world requirements.','6wWRCcU3VjlzD2dkWLPzdbfz9BQ.png'],
-  ['AI AUTOMATION','Automation designed to streamline repetitive operations and connect digital processes.','dmqISwkotUlhWWyvkcFf1EOLV0.png'],
-  ['MODERN WEB APPS','Fast, responsive and carefully engineered modern applications.','HpbwlnpjZg88PM4uK0b2CHxL9jk.png'],
-  ['PREMIUM WEBSITES','High-end websites combining strong design with modern development.','uWFHVnjUxXKK0XK3Rc93uITdeI.png'],
-  ['DIGITAL EXPERIENCES','Interactive experiences combining motion, design and technology.','ehEebUs6jiu23RcHeOuctgKml1M.png'],
-  ['CUSTOM DIGITAL SYSTEMS','Purpose-built solutions for unique digital requirements.','o4idiEzQppVbon8o49vXpYI8Wpk.png']
+  ['AI SYSTEMS','Custom AI tools, assistants, knowledge systems and intelligent dashboards shaped around real business workflows.','6wWRCcU3VjlzD2dkWLPzdbfz9BQ.png'],
+  ['AI AUTOMATION','Workflow automation, lead processing, content operations and connected business integrations.','dmqISwkotUlhWWyvkcFf1EOLV0.png'],
+  ['MODERN WEB APPS','Fast, scalable dashboards, client portals, SaaS interfaces and production web applications.','HpbwlnpjZg88PM4uK0b2CHxL9jk.png'],
+  ['PREMIUM WEBSITES','High-quality agency, product and business websites built for brand, performance and conversion.','uWFHVnjUxXKK0XK3Rc93uITdeI.png'],
+  ['DIGITAL EXPERIENCES','Interactive storytelling, motion-driven interfaces and immersive product experiences.','ehEebUs6jiu23RcHeOuctgKml1M.png'],
+  ['CUSTOM DIGITAL SYSTEMS','Purpose-built digital systems for requirements that do not fit standard software templates.','o4idiEzQppVbon8o49vXpYI8Wpk.png']
 ]
 
 const projectOptions = [
-  { id:'ai-systems', title:'AI SYSTEMS', description:'AI automation, intelligent workflows, AI integrations and custom AI experiences.' },
-  { id:'modern-web-apps', title:'MODERN WEB APPS', description:'Fast, scalable applications designed around real products, workflows and users.' },
-  { id:'digital-experiences', title:'DIGITAL EXPERIENCES', description:'Premium websites, interfaces and interactive digital experiences.' }
+  { id:'ai-systems', title:'AI SYSTEM', description:'Custom AI tools and intelligent systems.' },
+  { id:'modern-web-apps', title:'MODERN WEB APP', description:'Scalable products, portals and interfaces.' },
+  { id:'premium-websites', title:'PREMIUM WEBSITE', description:'High-quality brand and business websites.' },
+  { id:'ai-automation', title:'AI AUTOMATION', description:'Connected, intelligent business workflows.' },
+  { id:'digital-experiences', title:'DIGITAL EXPERIENCE', description:'Interactive, motion-led web experiences.' },
+  { id:'custom-digital-systems', title:'CUSTOM DIGITAL SYSTEM', description:'Purpose-built systems for unique requirements.' }
 ]
 
 const serviceProjectMap = {
   'AI SYSTEMS':'ai-systems',
-  'AI AUTOMATION':'ai-systems',
+  'AI AUTOMATION':'ai-automation',
   'MODERN WEB APPS':'modern-web-apps',
-  'PREMIUM WEBSITES':'digital-experiences',
+  'PREMIUM WEBSITES':'premium-websites',
   'DIGITAL EXPERIENCES':'digital-experiences',
-  'CUSTOM DIGITAL SYSTEMS':'modern-web-apps'
+  'CUSTOM DIGITAL SYSTEMS':'custom-digital-systems'
 }
 
 const whatsappNumber = '94706610373'
+const projectScopes = ['SMALL PROJECT','GROWTH PROJECT','LARGE / CUSTOM PROJECT','NOT SURE YET']
 
 function ProjectEnquiry({ initialService, onClose, triggerRef }) {
   const panelRef = useRef(null)
   const closeRef = useRef(null)
+  const stepHeadingRef = useRef(null)
   const scrollPositionRef = useRef(0)
   const sendingRef = useRef(false)
   const [selectedProject, setSelectedProject] = useState(initialService || '')
+  const [step, setStep] = useState(initialService ? 2 : 1)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
-  const [form, setForm] = useState({ name:'', email:'', phone:'', company:'', website:'', stage:'Idea', description:'', contactMethod:'Email' })
+  const [form, setForm] = useState({ projectName:'', description:'', goal:'', scope:'', name:'', email:'', phone:'' })
   const selectedOption = projectOptions.find(option => option.id === selectedProject)
 
   useEffect(() => {
@@ -247,6 +259,10 @@ function ProjectEnquiry({ initialService, onClose, triggerRef }) {
     }
   }, [onClose, triggerRef])
 
+  useEffect(() => {
+    if (step > 1) stepHeadingRef.current?.focus()
+  }, [step])
+
   const update = event => setForm(current => ({ ...current, [event.target.name]: event.target.value }))
   const whatsappHref = () => {
     const message = `Hi UTOMIC, I'd like to discuss a project.${selectedOption ? `\n\nProject area: ${selectedOption.title}` : ''}${form.name ? `\nName: ${form.name}` : ''}`
@@ -259,10 +275,28 @@ function ProjectEnquiry({ initialService, onClose, triggerRef }) {
     setStatus('idle')
   }
 
+  const validateStep = currentStep => {
+    if (currentStep === 1 && !selectedProject) return 'Choose the service that best matches your project.'
+    if (currentStep === 2 && (!form.projectName.trim() || !form.description.trim() || !form.goal.trim())) return 'Complete the project name, description and primary goal.'
+    if (currentStep === 3 && !form.scope) return 'Choose the most suitable project scope.'
+    if (currentStep === 4 && (!form.name.trim() || !/^\S+@\S+\.\S+$/.test(form.email))) return 'Enter your name and a valid email address.'
+    return ''
+  }
+
+  const moveStep = direction => {
+    if (direction > 0) {
+      const validationError = validateStep(step)
+      if (validationError) { setStatus('validation-error'); setError(validationError); return }
+    }
+    setError('')
+    setStatus('idle')
+    setStep(current => Math.min(5, Math.max(1, current + direction)))
+  }
+
   const submit = async event => {
     event.preventDefault()
-    if (!selectedOption) { setStatus('validation-error'); setError('Choose the project area that best matches what you want to build.'); return }
-    if (!event.currentTarget.reportValidity()) return
+    const validationError = [1,2,3,4].map(validateStep).find(Boolean)
+    if (validationError || !selectedOption) { setStatus('validation-error'); setError(validationError || 'Choose a project type.'); return }
     sendingRef.current = true
     setSending(true)
     setStatus('submitting')
@@ -297,19 +331,16 @@ function ProjectEnquiry({ initialService, onClose, triggerRef }) {
       </div>
       <div className="enquiry-builder">
         {status === 'success' ? <div className="enquiry-success"><span>DELIVERY CONFIRMED</span><p>Thank you for reaching out to UTOMIC. Your project request has been delivered.</p><a className="enquiry-whatsapp" href={whatsappHref()} target="_blank" rel="noopener noreferrer">CONTINUE ON WHATSAPP <Arrow /></a><button type="button" className="enquiry-close-action" onClick={onClose}>CLOSE</button></div> : <>
-          <fieldset className="project-options"><legend className="sr-only">Choose a project area</legend>{projectOptions.map((option, index) => <button key={option.id} type="button" className={`project-option ${selectedProject === option.id ? 'is-selected' : ''}`} aria-pressed={selectedProject === option.id} onClick={() => selectProject(option.id)} disabled={sending}><span>0{index + 1}</span><div><strong>{option.title}</strong><p>{option.description}</p></div><i aria-hidden="true">✓</i></button>)}</fieldset>
-          <div className={`enquiry-form-reveal ${selectedOption ? 'is-visible' : ''}`} aria-hidden={!selectedOption}>
-            {selectedOption && <form className="enquiry-form" onSubmit={submit} noValidate={false}>
-              <div className="enquiry-fields two-columns"><label>YOUR NAME *<input name="name" autoComplete="name" value={form.name} onChange={update} required /></label><label>EMAIL *<input name="email" type="email" autoComplete="email" value={form.email} onChange={update} required /></label></div>
-              <div className="enquiry-fields two-columns"><label>WHATSAPP / PHONE<input name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={update} /></label><label>COMPANY / BRAND<input name="company" autoComplete="organization" value={form.company} onChange={update} /></label></div>
-              <label>WEBSITE — OPTIONAL<input name="website" type="url" inputMode="url" placeholder="https://" value={form.website} onChange={update} /></label>
-              <label>PROJECT STAGE<select name="stage" value={form.stage} onChange={update}>{['Idea','Planning','Existing Product','Rebuild / Improvement'].map(stage => <option key={stage}>{stage}</option>)}</select></label>
-              <label>PROJECT DESCRIPTION *<textarea name="description" rows="5" value={form.description} onChange={update} placeholder="Tell us what you want to build, what problem it should solve, and any important features you already have in mind." required /></label>
-              <fieldset><legend>PREFERRED CONTACT</legend><div className="enquiry-radios"><label><input type="radio" name="contactMethod" value="Email" checked={form.contactMethod === 'Email'} onChange={update}/> EMAIL</label><label><input type="radio" name="contactMethod" value="WhatsApp" checked={form.contactMethod === 'WhatsApp'} onChange={update}/> WHATSAPP</label></div></fieldset>
-              {error && <p className="enquiry-error" role="alert">{error}</p>}
-              <div className="enquiry-actions"><button className="enquiry-submit" type="submit" disabled={sending}>{sending ? 'SENDING…' : 'SEND PROJECT REQUEST'} <Arrow /></button></div>
-            </form>}
-          </div>
+          <div className="enquiry-progress" aria-label={`Project enquiry step ${step} of 5`}>{[1,2,3,4,5].map(number => <span key={number} className={number <= step ? 'is-active' : ''}>{number}</span>)}</div>
+          <form className="enquiry-form enquiry-steps" onSubmit={submit} noValidate>
+            {step === 1 && <div className="enquiry-step"><h3 ref={stepHeadingRef} tabIndex="-1">WHAT DO YOU WANT TO BUILD?</h3><fieldset className="project-options"><legend className="sr-only">Choose a project area</legend>{projectOptions.map((option, index) => <button key={option.id} type="button" className={`project-option ${selectedProject === option.id ? 'is-selected' : ''}`} aria-pressed={selectedProject === option.id} onClick={() => selectProject(option.id)} disabled={sending}><span>0{index + 1}</span><div><strong>{option.title}</strong><p>{option.description}</p></div><i aria-hidden="true">✓</i></button>)}</fieldset></div>}
+            {step === 2 && <div className="enquiry-step"><h3 ref={stepHeadingRef} tabIndex="-1">TELL US ABOUT THE PROJECT</h3><label>PROJECT / COMPANY NAME *<input name="projectName" autoComplete="organization" value={form.projectName} onChange={update}/></label><label>PROJECT DESCRIPTION *<textarea name="description" rows="5" value={form.description} onChange={update} placeholder="What do you want to build, and what should it do?"/></label><label>PRIMARY GOAL *<textarea name="goal" rows="3" value={form.goal} onChange={update} placeholder="What outcome should this project create?"/></label></div>}
+            {step === 3 && <div className="enquiry-step"><h3 ref={stepHeadingRef} tabIndex="-1">PROJECT SCOPE</h3><fieldset className="scope-options"><legend className="sr-only">Choose a project scope</legend>{projectScopes.map(scope => <label key={scope} className={form.scope === scope ? 'is-selected' : ''}><input type="radio" name="scope" value={scope} checked={form.scope === scope} onChange={update}/><span>{scope}</span><i aria-hidden="true">✓</i></label>)}</fieldset></div>}
+            {step === 4 && <div className="enquiry-step"><h3 ref={stepHeadingRef} tabIndex="-1">HOW CAN WE REACH YOU?</h3><label>NAME *<input name="name" autoComplete="name" value={form.name} onChange={update}/></label><label>EMAIL *<input name="email" type="email" autoComplete="email" inputMode="email" value={form.email} onChange={update}/></label><label>WHATSAPP / PHONE — OPTIONAL<input name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={update}/></label></div>}
+            {step === 5 && <div className="enquiry-step enquiry-review"><h3 ref={stepHeadingRef} tabIndex="-1">REVIEW YOUR ENQUIRY</h3><dl><div><dt>SERVICE</dt><dd>{selectedOption?.title}</dd></div><div><dt>PROJECT</dt><dd>{form.projectName}</dd></div><div><dt>DESCRIPTION</dt><dd>{form.description}</dd></div><div><dt>PRIMARY GOAL</dt><dd>{form.goal}</dd></div><div><dt>SCOPE</dt><dd>{form.scope}</dd></div><div><dt>CONTACT</dt><dd>{form.name}<br/>{form.email}{form.phone && <><br/>{form.phone}</>}</dd></div></dl></div>}
+            {error && <p className="enquiry-error" role="alert">{error}</p>}
+            <div className="enquiry-step-actions">{step > 1 && <button type="button" className="enquiry-back" onClick={() => moveStep(-1)} disabled={sending}>BACK</button>}{step < 5 ? <button type="button" className="enquiry-next" onClick={() => moveStep(1)}>CONTINUE <Arrow /></button> : <button className="enquiry-submit" type="submit" disabled={sending}>{sending ? 'SENDING…' : 'SEND PROJECT ENQUIRY'} <Arrow /></button>}</div>
+          </form>
         </>}
       </div>
     </section>
@@ -328,7 +359,7 @@ function Services({ onStartProject }) {
       <div className="service-list">{services.map((s,i) => {
         return <article className="service-row service-row-enquiry" key={s[0]}>
           <button type="button" className="service-row-button" data-service={s[0]} onClick={openServiceEnquiry} aria-label={`Start a ${s[0].toLowerCase()} project enquiry`}>
-            <span className="service-number">0{i+1}</span><span className="service-title">{s[0]}</span><span className="service-description">{s[1]}</span><span className="service-thumb"><img src={`${A}${s[2]}`} alt="" /></span><Arrow /><span className="service-start">START A PROJECT <Arrow /></span>
+            <span className="service-number">0{i+1}</span><span className="service-title">{s[0]}</span><span className="service-description">{s[1]}</span><span className="service-thumb"><img src={`${A}${s[2]}`} alt="" loading="lazy" decoding="async" /></span><Arrow /><span className="service-start">START A PROJECT <Arrow /></span>
           </button>
         </article>
       })}</div>
@@ -338,6 +369,19 @@ function Services({ onStartProject }) {
 
 function DigitalExperiencesMotion({ onStartProject }) {
   const [showClosingBrand, setShowClosingBrand] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
+  const videoRef = useRef(null)
+  const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !('IntersectionObserver' in window)) { setVideoReady(true); return }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { setVideoReady(true); observer.disconnect() }
+    }, { rootMargin:'450px 0px' })
+    observer.observe(video)
+    return () => observer.disconnect()
+  }, [])
 
   const syncClosingBrand = event => {
     const { currentTime, duration } = event.currentTarget
@@ -362,8 +406,8 @@ function DigitalExperiencesMotion({ onStartProject }) {
           <div className="motion-stage-orbits" aria-hidden="true"><i/><i/><i/></div>
           <div className="motion-stage-mark motion-stage-mark-left" aria-hidden="true">INTELLIGENT<br/>DIGITAL<br/>SYSTEMS</div>
           <div className="motion-video-wrap">
-            <video autoPlay muted loop playsInline preload="metadata" onTimeUpdate={syncClosingBrand} aria-label="UTOMIC digital experiences motion showcase">
-              <source src={`${A}utomic-digital-experiences-final.mp4`} type="video/mp4"/>
+            <video ref={videoRef} autoPlay={!reducedMotion} muted loop playsInline preload={videoReady ? 'metadata' : 'none'} onTimeUpdate={syncClosingBrand} aria-label="UTOMIC digital experiences motion showcase">
+              {videoReady && <source src={`${A}utomic-digital-experiences-final.mp4`} type="video/mp4"/>}
             </video>
             <div className={`motion-closing-brand ${showClosingBrand ? 'is-visible' : ''}`} aria-hidden={!showClosingBrand}>
               <strong>UTOMIC</strong><span>SHEHAN.XYZ</span>
@@ -389,7 +433,7 @@ const posts = [
 function Insights({ onStartProject }) {
   return <section id="insights" className="section insights light-section"><div className="container">
     <Reveal className="section-heading split-heading"><div><SectionTitle>Insights</SectionTitle><h2>Insights shaping smarter digital growth.</h2></div><p>Original perspectives on AI systems, modern development, product design and creative technology.</p></Reveal>
-    <div className="post-grid">{posts.map((p,i)=><button type="button" className="post-card" key={p[1]} onClick={event => onStartProject(p[4], event.currentTarget)} aria-label={`${p[1]} — start a related project`}><div className="post-image"><img src={`${A}${p[3]}`} alt=""/><span>{p[0]}</span></div><div className="post-meta"><small>0{i+1} / UTOMIC NOTE</small><Arrow /></div><h3>{p[1]}</h3><p>{p[2]}</p></button>)}</div>
+    <div className="post-grid">{posts.map((p,i)=><button type="button" className="post-card" key={p[1]} onClick={event => onStartProject(p[4], event.currentTarget)} aria-label={`${p[1]} — start a related project`}><div className="post-image"><img src={`${A}${p[3]}`} alt="" loading="lazy" decoding="async"/><span>{p[0]}</span></div><div className="post-meta"><small>0{i+1} / UTOMIC NOTE</small><Arrow /></div><h3>{p[1]}</h3><p>{p[2]}</p></button>)}</div>
   </div></section>
 }
 
@@ -399,7 +443,7 @@ function Footer({ onStartProject }) {
       <Reveal className="footer-cta"><SectionTitle light>Start something intelligent</SectionTitle><h2>BUILD WHAT SCALES<br/>BEYOND LIMITS</h2><div><p>Create smarter systems, modern digital experiences and scalable technology designed for long-term growth.</p><ProjectButton light className="footer-project" onClick={event => onStartProject(null, event.currentTarget)}/></div></Reveal>
       <div className="footer-main">
         <div><a className="brand brand-footer" href="#home"><span className="brand-mark">U</span>UTOMIC</a><p>AI SYSTEMS &amp; MODERN WEB APPS</p></div>
-        <nav>{['Home','About','Services','Contact'].map(x=><a key={x} href={`#${x.toLowerCase()}`}>{x}</a>)}</nav>
+        <nav aria-label="Footer navigation">{['Home','About','Services','Insights','Contact'].map(x=><a key={x} href={`#${x.toLowerCase()}`}>{x}</a>)}</nav>
         <div className="contact-list"><span>START A PROJECT</span><a href="https://www.instagram.com/shehan66629/" target="_blank" rel="noopener noreferrer"><InstagramIcon/>@shehan66629</a><a href="https://wa.me/94706610373?text=Hi%20UTOMIC%2C%20I%27d%20like%20to%20discuss%20a%20project." target="_blank" rel="noopener noreferrer"><WhatsAppIcon/>+94 70 661 0373</a><a href="mailto:sheehansheehan120@gmail.com"><EmailIcon/>sheehansheehan120@gmail.com</a></div>
       </div>
       <div className="footer-word">UTOMIC</div>
@@ -418,5 +462,5 @@ export default function App() {
     setEnquiryOpen(true)
   }
   const closeProjectEnquiry = () => setEnquiryOpen(false)
-  return <><Navigation onStartProject={openProjectEnquiry}/><main><Hero/><About/><CapabilityTicker/><Systems/><Services onStartProject={openProjectEnquiry}/><DigitalExperiencesMotion onStartProject={openProjectEnquiry}/><Insights onStartProject={openProjectEnquiry}/></main><Footer onStartProject={openProjectEnquiry}/>{enquiryOpen && <ProjectEnquiry initialService={initialService} onClose={closeProjectEnquiry} triggerRef={enquiryTriggerRef}/>}</>
+  return <><Navigation onStartProject={openProjectEnquiry}/><main><Hero onStartProject={openProjectEnquiry}/><About/><CapabilityTicker/><Systems/><Services onStartProject={openProjectEnquiry}/><DigitalExperiencesMotion onStartProject={openProjectEnquiry}/><Insights onStartProject={openProjectEnquiry}/></main><Footer onStartProject={openProjectEnquiry}/>{enquiryOpen && <ProjectEnquiry initialService={initialService} onClose={closeProjectEnquiry} triggerRef={enquiryTriggerRef}/>}</>
 }

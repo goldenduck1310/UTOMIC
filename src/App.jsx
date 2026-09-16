@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { siteConfig } from './siteConfig.js'
 
 const A = '/assets/'
 
@@ -218,7 +219,8 @@ const serviceProjectMap = {
   'CUSTOM DIGITAL SYSTEMS':'custom-digital-systems'
 }
 
-const whatsappNumber = '94706610373'
+const { contact } = siteConfig
+const whatsappNumber = contact.whatsappNumber
 const projectScopes = ['SMALL PROJECT','GROWTH PROJECT','LARGE / CUSTOM PROJECT','NOT SURE YET']
 
 function ProjectEnquiry({ initialService, onClose, triggerRef }) {
@@ -232,7 +234,7 @@ function ProjectEnquiry({ initialService, onClose, triggerRef }) {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
-  const [form, setForm] = useState({ projectName:'', description:'', goal:'', scope:'', name:'', email:'', phone:'' })
+  const [form, setForm] = useState({ projectName:'', description:'', goal:'', scope:'', name:'', email:'', phone:'', companyWebsite:'' })
   const selectedOption = projectOptions.find(option => option.id === selectedProject)
 
   useEffect(() => {
@@ -277,9 +279,9 @@ function ProjectEnquiry({ initialService, onClose, triggerRef }) {
 
   const validateStep = currentStep => {
     if (currentStep === 1 && !selectedProject) return 'Choose the service that best matches your project.'
-    if (currentStep === 2 && (!form.projectName.trim() || !form.description.trim() || !form.goal.trim())) return 'Complete the project name, description and primary goal.'
+    if (currentStep === 2 && (form.projectName.trim().length < 2 || form.description.trim().length < 20 || form.goal.trim().length < 10)) return 'Add the project name, a clear description and the primary goal.'
     if (currentStep === 3 && !form.scope) return 'Choose the most suitable project scope.'
-    if (currentStep === 4 && (!form.name.trim() || !/^\S+@\S+\.\S+$/.test(form.email))) return 'Enter your name and a valid email address.'
+    if (currentStep === 4 && (form.name.trim().length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email))) return 'Enter your name and a valid email address.'
     return ''
   }
 
@@ -302,13 +304,15 @@ function ProjectEnquiry({ initialService, onClose, triggerRef }) {
     setStatus('submitting')
     setError('')
     try {
-      const response = await fetch('/api/enquiry', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ ...form, service:selectedOption.title }) })
+      const controller = new AbortController()
+      const timeout = window.setTimeout(() => controller.abort(), 15000)
+      const response = await fetch('/api/project-enquiry', { method:'POST', signal:controller.signal, headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ ...form, projectType:selectedOption.title }) }).finally(() => window.clearTimeout(timeout))
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(payload.error || 'We couldn’t send your enquiry. Please try again.')
       setStatus('success')
     } catch (submissionError) {
       setStatus('server-error')
-      setError(submissionError.message || 'We couldn’t send your enquiry. Please try again.')
+      setError(submissionError.name === 'AbortError' ? 'The request timed out. Please check your connection and try again.' : (submissionError.message || 'We couldn’t send your enquiry. Please try again.'))
     } finally {
       sendingRef.current = false
       setSending(false)
@@ -320,26 +324,26 @@ function ProjectEnquiry({ initialService, onClose, triggerRef }) {
       <button ref={closeRef} type="button" className="enquiry-close" onClick={onClose} aria-label="Close project enquiry" disabled={sending}>×</button>
       <div className="enquiry-intro">
         <span className="enquiry-label">START A PROJECT</span>
-        <h2 id="enquiry-title">{status === 'success' ? 'PROJECT REQUEST RECEIVED.' : <>WHAT DO YOU WANT<br/>TO BUILD?</>}</h2>
+        <h2 id="enquiry-title">{status === 'success' ? 'PROJECT RECEIVED.' : <>WHAT DO YOU WANT<br/>TO BUILD?</>}</h2>
         <p>Tell us about what you're building and what you need. Choose the area that best matches your project.</p>
         <div className="enquiry-contact" aria-label="Contact UTOMIC directly">
           <strong>START A PROJECT</strong>
-          <a href="https://www.instagram.com/shehan66629/" target="_blank" rel="noopener noreferrer" aria-label="Open UTOMIC on Instagram"><InstagramIcon/><span>@shehan66629</span></a>
-          <a href="https://wa.me/94706610373?text=Hi%20UTOMIC%2C%20I%27d%20like%20to%20discuss%20a%20project." target="_blank" rel="noopener noreferrer" aria-label="Chat with UTOMIC on WhatsApp"><WhatsAppIcon/><span>+94 70 661 0373</span></a>
-          <a href="mailto:sheehansheehan120@gmail.com" aria-label="Email UTOMIC"><EmailIcon/><span>sheehansheehan120@gmail.com</span></a>
+          <a href={contact.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Open UTOMIC on Instagram"><InstagramIcon/><span>{contact.instagramHandle}</span></a>
+          <a href={`https://wa.me/${contact.whatsappNumber}?text=Hi%20UTOMIC%2C%20I%27d%20like%20to%20discuss%20a%20project.`} target="_blank" rel="noopener noreferrer" aria-label="Chat with UTOMIC on WhatsApp"><WhatsAppIcon/><span>{contact.whatsappDisplay}</span></a>
+          <a href={`mailto:${contact.email}`} aria-label="Email UTOMIC"><EmailIcon/><span>{contact.email}</span></a>
         </div>
       </div>
       <div className="enquiry-builder">
-        {status === 'success' ? <div className="enquiry-success"><span>DELIVERY CONFIRMED</span><p>Thank you for reaching out to UTOMIC. Your project request has been delivered.</p><a className="enquiry-whatsapp" href={whatsappHref()} target="_blank" rel="noopener noreferrer">CONTINUE ON WHATSAPP <Arrow /></a><button type="button" className="enquiry-close-action" onClick={onClose}>CLOSE</button></div> : <>
+        {status === 'success' ? <div className="enquiry-success" role="status" aria-live="polite"><span>DELIVERY CONFIRMED</span><p>Thanks for reaching out. Your project enquiry has been received.</p><a className="enquiry-whatsapp" href={whatsappHref()} target="_blank" rel="noopener noreferrer">CONTINUE ON WHATSAPP <Arrow /></a><button type="button" className="enquiry-close-action" onClick={onClose}>CLOSE</button></div> : <>
           <div className="enquiry-progress" aria-label={`Project enquiry step ${step} of 5`}>{[1,2,3,4,5].map(number => <span key={number} className={number <= step ? 'is-active' : ''}>{number}</span>)}</div>
           <form className="enquiry-form enquiry-steps" onSubmit={submit} noValidate>
             {step === 1 && <div className="enquiry-step"><h3 ref={stepHeadingRef} tabIndex="-1">WHAT DO YOU WANT TO BUILD?</h3><fieldset className="project-options"><legend className="sr-only">Choose a project area</legend>{projectOptions.map((option, index) => <button key={option.id} type="button" className={`project-option ${selectedProject === option.id ? 'is-selected' : ''}`} aria-pressed={selectedProject === option.id} onClick={() => selectProject(option.id)} disabled={sending}><span>0{index + 1}</span><div><strong>{option.title}</strong><p>{option.description}</p></div><i aria-hidden="true">✓</i></button>)}</fieldset></div>}
-            {step === 2 && <div className="enquiry-step"><h3 ref={stepHeadingRef} tabIndex="-1">TELL US ABOUT THE PROJECT</h3><label>PROJECT / COMPANY NAME *<input name="projectName" autoComplete="organization" value={form.projectName} onChange={update}/></label><label>PROJECT DESCRIPTION *<textarea name="description" rows="5" value={form.description} onChange={update} placeholder="What do you want to build, and what should it do?"/></label><label>PRIMARY GOAL *<textarea name="goal" rows="3" value={form.goal} onChange={update} placeholder="What outcome should this project create?"/></label></div>}
+            {step === 2 && <div className="enquiry-step"><h3 ref={stepHeadingRef} tabIndex="-1">TELL US ABOUT THE PROJECT</h3><label>PROJECT / COMPANY NAME *<input name="projectName" autoComplete="organization" value={form.projectName} onChange={update} minLength="2" maxLength="160" required/></label><label>PROJECT DESCRIPTION *<textarea name="description" rows="5" value={form.description} onChange={update} minLength="20" maxLength="5000" required placeholder="What do you want to build, and what should it do?"/></label><label>PRIMARY GOAL *<textarea name="goal" rows="3" value={form.goal} onChange={update} minLength="10" maxLength="1500" required placeholder="What outcome should this project create?"/></label><label className="enquiry-honeypot" aria-hidden="true">LEAVE THIS FIELD EMPTY<input name="companyWebsite" value={form.companyWebsite} onChange={update} tabIndex="-1" autoComplete="off"/></label></div>}
             {step === 3 && <div className="enquiry-step"><h3 ref={stepHeadingRef} tabIndex="-1">PROJECT SCOPE</h3><fieldset className="scope-options"><legend className="sr-only">Choose a project scope</legend>{projectScopes.map(scope => <label key={scope} className={form.scope === scope ? 'is-selected' : ''}><input type="radio" name="scope" value={scope} checked={form.scope === scope} onChange={update}/><span>{scope}</span><i aria-hidden="true">✓</i></label>)}</fieldset></div>}
-            {step === 4 && <div className="enquiry-step"><h3 ref={stepHeadingRef} tabIndex="-1">HOW CAN WE REACH YOU?</h3><label>NAME *<input name="name" autoComplete="name" value={form.name} onChange={update}/></label><label>EMAIL *<input name="email" type="email" autoComplete="email" inputMode="email" value={form.email} onChange={update}/></label><label>WHATSAPP / PHONE — OPTIONAL<input name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={update}/></label></div>}
+            {step === 4 && <div className="enquiry-step"><h3 ref={stepHeadingRef} tabIndex="-1">HOW CAN WE REACH YOU?</h3><label>NAME *<input name="name" autoComplete="name" value={form.name} onChange={update} minLength="2" maxLength="120" required/></label><label>EMAIL *<input name="email" type="email" autoComplete="email" inputMode="email" value={form.email} onChange={update} maxLength="254" required/></label><label>WHATSAPP / PHONE — OPTIONAL<input name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={update} maxLength="80"/></label></div>}
             {step === 5 && <div className="enquiry-step enquiry-review"><h3 ref={stepHeadingRef} tabIndex="-1">REVIEW YOUR ENQUIRY</h3><dl><div><dt>SERVICE</dt><dd>{selectedOption?.title}</dd></div><div><dt>PROJECT</dt><dd>{form.projectName}</dd></div><div><dt>DESCRIPTION</dt><dd>{form.description}</dd></div><div><dt>PRIMARY GOAL</dt><dd>{form.goal}</dd></div><div><dt>SCOPE</dt><dd>{form.scope}</dd></div><div><dt>CONTACT</dt><dd>{form.name}<br/>{form.email}{form.phone && <><br/>{form.phone}</>}</dd></div></dl></div>}
-            {error && <p className="enquiry-error" role="alert">{error}</p>}
-            <div className="enquiry-step-actions">{step > 1 && <button type="button" className="enquiry-back" onClick={() => moveStep(-1)} disabled={sending}>BACK</button>}{step < 5 ? <button type="button" className="enquiry-next" onClick={() => moveStep(1)}>CONTINUE <Arrow /></button> : <button className="enquiry-submit" type="submit" disabled={sending}>{sending ? 'SENDING…' : 'SEND PROJECT ENQUIRY'} <Arrow /></button>}</div>
+            {error && <p className="enquiry-error" role="alert" aria-live="assertive">{error}</p>}
+            <div className="enquiry-step-actions">{step > 1 && <button type="button" className="enquiry-back" onClick={() => moveStep(-1)} disabled={sending}>BACK</button>}{step < 5 ? <button type="button" className="enquiry-next" onClick={() => moveStep(1)}>CONTINUE <Arrow /></button> : <button className="enquiry-submit" type="submit" disabled={sending}>{sending ? 'SENDING…' : status === 'server-error' ? 'RETRY PROJECT ENQUIRY' : 'SEND PROJECT ENQUIRY'} <Arrow /></button>}</div>
           </form>
         </>}
       </div>
@@ -410,7 +414,7 @@ function DigitalExperiencesMotion({ onStartProject }) {
               {videoReady && <source src={`${A}utomic-digital-experiences-final.mp4`} type="video/mp4"/>}
             </video>
             <div className={`motion-closing-brand ${showClosingBrand ? 'is-visible' : ''}`} aria-hidden={!showClosingBrand}>
-              <strong>UTOMIC</strong><span>SHEHAN.XYZ</span>
+              <strong>UTOMIC</strong><span>AI SYSTEMS &amp; MODERN WEB APPS</span>
             </div>
           </div>
           <div className="motion-stage-mark motion-stage-mark-right" aria-hidden="true">AI-POWERED<br/>MOTION-LED<br/>EXPERIENCES</div>
@@ -444,10 +448,10 @@ function Footer({ onStartProject }) {
       <div className="footer-main">
         <div><a className="brand brand-footer" href="#home"><span className="brand-mark">U</span>UTOMIC</a><p>AI SYSTEMS &amp; MODERN WEB APPS</p></div>
         <nav aria-label="Footer navigation">{['Home','About','Services','Insights','Contact'].map(x=><a key={x} href={`#${x.toLowerCase()}`}>{x}</a>)}</nav>
-        <div className="contact-list"><span>START A PROJECT</span><a href="https://www.instagram.com/shehan66629/" target="_blank" rel="noopener noreferrer"><InstagramIcon/>@shehan66629</a><a href="https://wa.me/94706610373?text=Hi%20UTOMIC%2C%20I%27d%20like%20to%20discuss%20a%20project." target="_blank" rel="noopener noreferrer"><WhatsAppIcon/>+94 70 661 0373</a><a href="mailto:sheehansheehan120@gmail.com"><EmailIcon/>sheehansheehan120@gmail.com</a></div>
+        <div className="contact-list"><span>START A PROJECT</span><a href={contact.instagramUrl} target="_blank" rel="noopener noreferrer"><InstagramIcon/>{contact.instagramHandle}</a><a href={`https://wa.me/${contact.whatsappNumber}?text=Hi%20UTOMIC%2C%20I%27d%20like%20to%20discuss%20a%20project.`} target="_blank" rel="noopener noreferrer"><WhatsAppIcon/>{contact.whatsappDisplay}</a><a href={`mailto:${contact.email}`}><EmailIcon/>{contact.email}</a></div>
       </div>
       <div className="footer-word">UTOMIC</div>
-      <div className="copyright"><span>© {new Date().getFullYear()} UTOMIC</span><span>AI SYSTEMS &amp; MODERN WEB APPS</span><a href="#home">BACK TO TOP ↑</a></div>
+      <div className="copyright"><span>© {new Date().getFullYear()} UTOMIC</span><span>AI SYSTEMS &amp; MODERN WEB APPS</span><span className="legal-links"><a href="/privacy.html">PRIVACY</a><a href="/terms.html">TERMS</a></span><a href="#home">BACK TO TOP ↑</a></div>
     </div>
   </footer>
 }

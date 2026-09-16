@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 const A = '/assets/'
 
 const Arrow = ({ down = false }) => <span className={`arrow ${down ? 'down' : ''}`} aria-hidden="true">↗</span>
+const InstagramIcon = () => <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.4" cy="6.7" r="1"/></svg>
+const WhatsAppIcon = () => <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.5L3 20.5l1.4-4.7a8.5 8.5 0 1 1 16.1-4.2Z"/><path d="M8.2 7.8c.3-.7.7-.7 1-.7h.3c.2 0 .4.1.5.4l.8 1.9c.1.3.1.5-.1.7l-.6.8c-.2.2-.2.4-.1.6.5 1.2 1.5 2.2 2.7 2.8.2.1.4.1.6-.1l.8-1c.2-.2.4-.3.7-.2l2 .9c.3.1.4.3.4.5 0 .3-.2 1.3-.7 1.8-.5.6-1.3.9-2.1.8-1.1-.1-2.6-.6-4.4-2.2-2.2-1.9-3.5-4.4-3.6-5.6 0-.6.2-1.1.5-1.4Z"/></svg>
+const EmailIcon = () => <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
 
-function Button({ href = '#contact', light = false, children }) {
-  return <a className={`button ${light ? 'button-light' : ''}`} href={href}><span>{children}</span><Arrow /></a>
+function ProjectButton({ onClick, light = false, className = '', children = 'START A PROJECT' }) {
+  return <button type="button" className={`button ${light ? 'button-light' : ''} ${className}`} onClick={onClick}><span>{children}</span><Arrow /></button>
 }
 
 function SectionTitle({ children, light = false }) {
@@ -26,28 +30,15 @@ function Reveal({ children, className = '' }) {
   return <div ref={ref} className={`reveal ${className}`}>{children}</div>
 }
 
-function Navigation() {
-  const [open, setOpen] = useState(false)
-  const links = [['Home','#home'],['About','#about'],['Services','#services']]
-  useEffect(() => {
-    document.body.classList.toggle('menu-open', open)
-    return () => document.body.classList.remove('menu-open')
-  }, [open])
+function Navigation({ onStartProject }) {
   return <>
     <header className="nav-shell">
       <a className="brand" href="#home" aria-label="UTOMIC home"><span className="brand-mark">U</span>UTOMIC</a>
       <div className="nav-position">AI SYSTEMS &amp; MODERN WEB APPS</div>
       <div className="nav-actions">
-        <button className="menu-button" aria-expanded={open} aria-controls="site-menu" onClick={() => setOpen(!open)}>
-          <span>{open ? 'Close' : 'Menu'}</span><i /><i />
-        </button>
-        <Button href="#contact">Get in touch</Button>
+        <ProjectButton className="nav-project" onClick={event => onStartProject(null, event.currentTarget)}/>
       </div>
     </header>
-    <div id="site-menu" className={`menu-panel ${open ? 'open' : ''}`} aria-hidden={!open}>
-      <div className="menu-links">{links.map(([label,href], i) => <a key={label} href={href} onClick={() => setOpen(false)}><span>0{i+1}</span>{label}<Arrow /></a>)}</div>
-      <div className="menu-meta"><p>Intelligent systems.<br/>Thoughtful interfaces.</p><a href="mailto:sheehansheehan120@gmail.com">sheehansheehan120@gmail.com</a></div>
-    </div>
   </>
 }
 
@@ -203,239 +194,213 @@ const services = [
   ['CUSTOM DIGITAL SYSTEMS','Purpose-built solutions for unique digital requirements.','o4idiEzQppVbon8o49vXpYI8Wpk.png']
 ]
 
-function Services() {
-  return <section id="services" className="section dark-section services">
-    <div className="container">
-      <Reveal className="section-heading split-heading"><div><SectionTitle light>What we do</SectionTitle><h2>Smart systems for digital growth.</h2></div><p>From intelligent workflows to premium interfaces, every system is shaped around clarity, usefulness and scale.</p></Reveal>
-      <div className="service-list">{services.map((s,i)=><article className="service-row" key={s[0]}>
-        <span className="service-number">0{i+1}</span><h3>{s[0]}</h3><p>{s[1]}</p><div className="service-thumb"><img src={`${A}${s[2]}`} alt="" /></div><Arrow />
-      </article>)}</div>
-    </div>
-  </section>
-}
-
-const SearchIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="21" cy="21" r="12"/><path d="m30 30 11 11"/></svg>
-const CodeIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="m17 13-10 11 10 11M31 13l10 11-10 11M28 7l-8 34"/></svg>
-const GrowthIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 39V28h7v11M20 39V20h7v19M32 39V10h7v29M6 39h36"/></svg>
-
-function WorkCard({ number, title, icon, items, details }) {
-  const [expanded, setExpanded] = useState(false)
-  const detailId = `work-${title.toLowerCase()}-details`
-  return <article id={`work-${title.toLowerCase()}`} className={`work-card work-card-${number}`}>
-    <div className="work-card-top"><span>{number}</span><div className="work-card-icon">{icon}</div></div>
-    <h3>{title}</h3>
-    <div className="work-card-line"/>
-    <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>
-    <button type="button" className="work-card-toggle" aria-label={`${expanded ? 'Hide' : 'Show'} ${title.toLowerCase()} details`} aria-expanded={expanded} aria-controls={detailId} onClick={() => setExpanded(value => !value)}><Arrow/></button>
-    <div id={detailId} className={`work-card-details ${expanded ? 'is-open' : ''}`} aria-hidden={!expanded}><div>{details.map(detail => <span key={detail}>{detail}</span>)}</div></div>
-  </article>
-}
-
-function WorkPortal() {
-  return <div className="work-portal" role="img" aria-label="UTOMIC ideas to impact visual">
-    <svg className="portal-orbits" viewBox="0 0 520 720" aria-hidden="true"><ellipse cx="255" cy="310" rx="212" ry="94"/><ellipse cx="255" cy="310" rx="250" ry="126" transform="rotate(63 255 310)"/><path d="M24 515C92 155 385 32 494 304"/></svg>
-    <div className="portal-halo" aria-hidden="true"/>
-    <div className="portal-monolith">
-      <strong>UTOMIC</strong>
-      <span>IDEAS<br/>SYSTEMS<br/>AUTOMATION<br/>GROWTH</span>
-      <i aria-hidden="true"/>
-    </div>
-    <svg className="portal-terrain" viewBox="0 0 620 370" preserveAspectRatio="none" aria-hidden="true">
-      <defs><linearGradient id="terrainFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#05050b"/><stop offset=".56" stopColor="#171126"/><stop offset="1" stopColor="#08070f"/></linearGradient><linearGradient id="terrainEdge" x1="0" y1="0" x2="1" y2="0"><stop stopColor="#31245f"/><stop offset=".55" stopColor="#c0a1ff"/><stop offset="1" stopColor="#52349c"/></linearGradient></defs>
-      <path d="M0 284 44 249 81 260 121 201 157 215 209 137 248 167 289 91 325 151 370 118 421 190 466 166 519 228 559 213 620 259V370H0Z" fill="url(#terrainFill)"/>
-      <path d="M0 284 44 249 81 260 121 201 157 215 209 137 248 167 289 91 325 151 370 118 421 190 466 166 519 228 559 213 620 259" fill="none" stroke="url(#terrainEdge)" strokeWidth="2"/>
-      <path d="m121 201 86 65 82-175 50 164 82-65 45 121M209 137l39 30 41-76M370 118l51 72 45-24" fill="none" stroke="rgba(154,122,226,.18)"/>
-    </svg>
-    <div className="portal-reflection" aria-hidden="true"/>
-  </div>
-}
-
-const workSteps = [
-  { number:'01', title:'DISCOVER', icon:<SearchIcon/>, items:['Requirements analysis','Workflow discovery','Goals and opportunities'], details:['Requirements mapping','Workflow review','Opportunity planning'] },
-  { number:'02', title:'DESIGN', icon:<LayersIcon/>, items:['UX / UI design','System architecture','AI strategy'], details:['Interface direction','System architecture','AI workflow planning'] },
-  { number:'03', title:'BUILD', icon:<CodeIcon/>, items:['AI integration','Modern web development','Testing and deployment'], details:['Development','Integrations','Testing'] },
-  { number:'04', title:'EVOLVE', icon:<GrowthIcon/>, items:['Performance optimization','Feature expansion','Ongoing support'], details:['Optimization','Feature expansion','Long-term improvement'] }
+const projectOptions = [
+  { id:'ai-systems', title:'AI SYSTEMS', description:'AI automation, intelligent workflows, AI integrations and custom AI experiences.' },
+  { id:'modern-web-apps', title:'MODERN WEB APPS', description:'Fast, scalable applications designed around real products, workflows and users.' },
+  { id:'digital-experiences', title:'DIGITAL EXPERIENCES', description:'Premium websites, interfaces and interactive digital experiences.' }
 ]
 
-function Pricing() {
-  return <section id="how-we-work" className="section how-we-work dark-section">
-    <div className="container">
-      <Reveal className="how-work-inner">
-        <div className="how-work-intro">
-          <div className="how-work-label"><i/>HOW WE WORK</div>
-          <h2><span>From ideas</span><span>to <em>real impact.</em></span></h2>
-          <p>A clear, focused process for turning your<br className="desktop-break"/> requirements into intelligent, scalable<br className="desktop-break"/> digital products.</p>
-        </div>
-        <WorkPortal/>
-        <div className="work-card-grid">{workSteps.map(step => <WorkCard key={step.number} {...step}/>)}</div>
-        <div className="work-detail"><i/><p>IDEAS<br/>SYSTEMS<br/>REAL IMPACT</p></div>
-        <div className="work-flow" aria-label="Workflow: Idea to Design to Build to Evolve"><span>IDEA</span><b>→</b><span>DESIGN</span><b>→</b><span>BUILD</span><b>→</b><span>EVOLVE</span></div>
-      </Reveal>
-    </div>
-  </section>
+const serviceProjectMap = {
+  'AI SYSTEMS':'ai-systems',
+  'AI AUTOMATION':'ai-systems',
+  'MODERN WEB APPS':'modern-web-apps',
+  'PREMIUM WEBSITES':'digital-experiences',
+  'DIGITAL EXPERIENCES':'digital-experiences',
+  'CUSTOM DIGITAL SYSTEMS':'modern-web-apps'
 }
 
-const advisorWelcome = "Hi, I’m the UTOMIC AI Advisor. Ask me anything about AI systems, automation or modern web apps."
+const whatsappNumber = '94706610373'
 
-const advisorTime = () => new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })
-const HeartIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 39 8.7 24.4C1.1 16.6 6.4 7 15 7c4.4 0 7.3 2.5 9 5.3C25.7 9.5 28.7 7 33 7c8.6 0 13.9 9.6 6.3 17.4L24 39Z"/></svg>
-const AdvisorBotIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="9" y="13" width="30" height="25" rx="8"/><path d="M24 13V7m-11 17H6m36 0h-7M17 30h14"/><circle cx="18" cy="24" r="2"/><circle cx="30" cy="24" r="2"/><circle cx="24" cy="6" r="2"/></svg>
-const AdvisorUserIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="17" r="8"/><path d="M10 41c1.5-9 7-14 14-14s12.5 5 14 14H10Z"/></svg>
-const PaperPlaneIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><path d="m7 23 34-15-10 32-8-12-16-5Z"/><path d="m23 28 18-20"/></svg>
-const MicrophoneIcon = () => <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="17" y="5" width="14" height="25" rx="7"/><path d="M11 23c0 8 5 13 13 13s13-5 13-13M24 36v7m-7 0h14"/></svg>
-
-function AdvisorBrowserFrame() {
-  return <div className="advisor-browser" aria-hidden="true">
-    <div className="browser-left"><span className="traffic red"/><span className="traffic yellow"/><span className="traffic green"/><i className="browser-sidebar">▣</i><i>‹</i><i>›</i></div>
-    <div className="browser-address"><span>⌕</span><strong>▣&nbsp; utomic.com</strong><i>↻</i></div>
-    <div className="browser-right"><i>⇧</i><i>＋</i><i>▣</i></div>
-  </div>
-}
-
-function AIAdvisor() {
-  const [messages, setMessages] = useState(() => [{ id:'welcome', role:'assistant', content:advisorWelcome, timestamp:advisorTime() }])
-  const [draft, setDraft] = useState('')
-  const [sending, setSending] = useState(false)
+function ProjectEnquiry({ initialService, onClose, triggerRef }) {
+  const panelRef = useRef(null)
+  const closeRef = useRef(null)
+  const scrollPositionRef = useRef(0)
+  const sendingRef = useRef(false)
+  const [selectedProject, setSelectedProject] = useState(initialService || '')
+  const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
-  const [retryMessages, setRetryMessages] = useState(null)
-  const feedRef = useRef(null)
+  const [sending, setSending] = useState(false)
+  const [form, setForm] = useState({ name:'', email:'', phone:'', company:'', website:'', stage:'Idea', description:'', contactMethod:'Email' })
+  const selectedOption = projectOptions.find(option => option.id === selectedProject)
 
   useEffect(() => {
-    const feed = feedRef.current
-    if (feed) feed.scrollTo({ top:feed.scrollHeight, behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
-  }, [messages, sending])
+    const previousOverflow = document.body.style.overflow
+    scrollPositionRef.current = window.scrollY
+    document.body.style.overflow = 'hidden'
+    closeRef.current?.focus()
+    const handleKeyDown = event => {
+      if (event.key === 'Escape' && !sendingRef.current) { event.preventDefault(); onClose(); return }
+      if (event.key !== 'Tab' || !panelRef.current) return
+      const focusable = [...panelRef.current.querySelectorAll('button, input, select, textarea, [href]')].filter(element => !element.disabled)
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
+      window.scrollTo(0, scrollPositionRef.current)
+      triggerRef.current?.focus()
+    }
+  }, [onClose, triggerRef])
 
-  const requestConversation = async nextMessages => {
-    if (sending) return
+  const update = event => setForm(current => ({ ...current, [event.target.name]: event.target.value }))
+  const whatsappHref = () => {
+    const message = `Hi UTOMIC, I'd like to discuss a project.${selectedOption ? `\n\nProject area: ${selectedOption.title}` : ''}${form.name ? `\nName: ${form.name}` : ''}`
+    return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+  }
+
+  const selectProject = project => {
+    setSelectedProject(project)
     setError('')
-    setRetryMessages(null)
+    setStatus('idle')
+  }
+
+  const submit = async event => {
+    event.preventDefault()
+    if (!selectedOption) { setStatus('validation-error'); setError('Choose the project area that best matches what you want to build.'); return }
+    if (!event.currentTarget.reportValidity()) return
+    sendingRef.current = true
     setSending(true)
+    setStatus('submitting')
+    setError('')
     try {
-      const response = await fetch('/api/chat', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json' },
-        body:JSON.stringify({ messages:nextMessages.map(({ role, content:messageContent }) => ({ role, content:messageContent })) })
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok || !data.message) throw new Error('request-failed')
-      setMessages(current => [...current, { id:`assistant-${Date.now()}`, role:'assistant', content:data.message, timestamp:advisorTime() }])
-    } catch {
-      setError('UTOMIC AI couldn’t respond right now. Please try again.')
-      setRetryMessages(nextMessages)
+      const response = await fetch('/api/enquiry', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ ...form, service:selectedOption.title }) })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(payload.error || 'We couldn’t send your enquiry. Please try again.')
+      setStatus('success')
+    } catch (submissionError) {
+      setStatus('server-error')
+      setError(submissionError.message || 'We couldn’t send your enquiry. Please try again.')
     } finally {
+      sendingRef.current = false
       setSending(false)
     }
   }
 
-  const sendMessage = () => {
-    const content = draft.trim()
-    if (!content || sending) return
-    const userMessage = { id:`user-${Date.now()}`, role:'user', content, timestamp:advisorTime() }
-    const nextMessages = [...messages, userMessage]
-    setMessages(nextMessages)
-    setDraft('')
-    requestConversation(nextMessages)
-  }
+  return createPortal(<div className="enquiry-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !sending) onClose() }}>
+    <section className="enquiry-panel" role="dialog" aria-modal="true" aria-labelledby="enquiry-title" ref={panelRef}>
+      <button ref={closeRef} type="button" className="enquiry-close" onClick={onClose} aria-label="Close project enquiry" disabled={sending}>×</button>
+      <div className="enquiry-intro">
+        <span className="enquiry-label">START A PROJECT</span>
+        <h2 id="enquiry-title">{status === 'success' ? 'PROJECT REQUEST RECEIVED.' : <>WHAT DO YOU WANT<br/>TO BUILD?</>}</h2>
+        <p>Tell us about what you're building and what you need. Choose the area that best matches your project.</p>
+        <div className="enquiry-contact" aria-label="Contact UTOMIC directly">
+          <strong>START A PROJECT</strong>
+          <a href="https://www.instagram.com/shehan66629/" target="_blank" rel="noopener noreferrer" aria-label="Open UTOMIC on Instagram"><InstagramIcon/><span>@shehan66629</span></a>
+          <a href="https://wa.me/94706610373?text=Hi%20UTOMIC%2C%20I%27d%20like%20to%20discuss%20a%20project." target="_blank" rel="noopener noreferrer" aria-label="Chat with UTOMIC on WhatsApp"><WhatsAppIcon/><span>+94 70 661 0373</span></a>
+          <a href="mailto:sheehansheehan120@gmail.com" aria-label="Email UTOMIC"><EmailIcon/><span>sheehansheehan120@gmail.com</span></a>
+        </div>
+      </div>
+      <div className="enquiry-builder">
+        {status === 'success' ? <div className="enquiry-success"><span>DELIVERY CONFIRMED</span><p>Thank you for reaching out to UTOMIC. Your project request has been delivered.</p><a className="enquiry-whatsapp" href={whatsappHref()} target="_blank" rel="noopener noreferrer">CONTINUE ON WHATSAPP <Arrow /></a><button type="button" className="enquiry-close-action" onClick={onClose}>CLOSE</button></div> : <>
+          <fieldset className="project-options"><legend className="sr-only">Choose a project area</legend>{projectOptions.map((option, index) => <button key={option.id} type="button" className={`project-option ${selectedProject === option.id ? 'is-selected' : ''}`} aria-pressed={selectedProject === option.id} onClick={() => selectProject(option.id)} disabled={sending}><span>0{index + 1}</span><div><strong>{option.title}</strong><p>{option.description}</p></div><i aria-hidden="true">✓</i></button>)}</fieldset>
+          <div className={`enquiry-form-reveal ${selectedOption ? 'is-visible' : ''}`} aria-hidden={!selectedOption}>
+            {selectedOption && <form className="enquiry-form" onSubmit={submit} noValidate={false}>
+              <div className="enquiry-fields two-columns"><label>YOUR NAME *<input name="name" autoComplete="name" value={form.name} onChange={update} required /></label><label>EMAIL *<input name="email" type="email" autoComplete="email" value={form.email} onChange={update} required /></label></div>
+              <div className="enquiry-fields two-columns"><label>WHATSAPP / PHONE<input name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={update} /></label><label>COMPANY / BRAND<input name="company" autoComplete="organization" value={form.company} onChange={update} /></label></div>
+              <label>WEBSITE — OPTIONAL<input name="website" type="url" inputMode="url" placeholder="https://" value={form.website} onChange={update} /></label>
+              <label>PROJECT STAGE<select name="stage" value={form.stage} onChange={update}>{['Idea','Planning','Existing Product','Rebuild / Improvement'].map(stage => <option key={stage}>{stage}</option>)}</select></label>
+              <label>PROJECT DESCRIPTION *<textarea name="description" rows="5" value={form.description} onChange={update} placeholder="Tell us what you want to build, what problem it should solve, and any important features you already have in mind." required /></label>
+              <fieldset><legend>PREFERRED CONTACT</legend><div className="enquiry-radios"><label><input type="radio" name="contactMethod" value="Email" checked={form.contactMethod === 'Email'} onChange={update}/> EMAIL</label><label><input type="radio" name="contactMethod" value="WhatsApp" checked={form.contactMethod === 'WhatsApp'} onChange={update}/> WHATSAPP</label></div></fieldset>
+              {error && <p className="enquiry-error" role="alert">{error}</p>}
+              <div className="enquiry-actions"><button className="enquiry-submit" type="submit" disabled={sending}>{sending ? 'SENDING…' : 'SEND PROJECT REQUEST'} <Arrow /></button></div>
+            </form>}
+          </div>
+        </>}
+      </div>
+    </section>
+  </div>, document.body)
+}
 
-  const handleKeyDown = event => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault()
-      sendMessage()
-    }
+function Services({ onStartProject }) {
+  const openServiceEnquiry = event => {
+    const service = serviceProjectMap[event.currentTarget.dataset.service]
+    if (!service) return
+    onStartProject(service, event.currentTarget)
   }
-
-  return <section id="ai-advisor" className="section ai-advisor ai-advisor-final dark-section">
-    <AdvisorBrowserFrame/>
-    <div className="advisor-grid" aria-hidden="true"/><div className="advisor-glow" aria-hidden="true"/><div className="advisor-stars" aria-hidden="true"/>
-    <div className="advisor-social" aria-hidden="true"><span>◒</span><span>in</span><span>◎</span></div>
-    <div className="advisor-indicators" aria-hidden="true"><span>✦</span><i/><span>Ⅱ</span><i/><span>●</span></div>
+  return <section id="services" className="section dark-section services">
     <div className="container">
-      <Reveal className="advisor-inner">
-        <div className="advisor-orb" aria-hidden="true"><HeartIcon/></div>
-        <div className="advisor-heading">
-          <h2><span>Your <em>Personal</em></span><span>AI Advisor</span></h2>
-          <p>Ask UTOMIC anything about AI systems, automation, digital products and modern web experiences.</p>
-        </div>
-        <div className="advisor-beta" aria-label="UTOMIC beta registration preview">
-          <label className="sr-only" htmlFor="beta-email">Email address</label>
-          <input id="beta-email" type="email" placeholder="Email address" autoComplete="email"/>
-          <button type="button" disabled title="Beta registration is not available yet">Join Beta</button>
-        </div>
-        <div className="advisor-chat" aria-label="Chat with the UTOMIC AI Advisor">
-          <div className="advisor-messages" ref={feedRef} role="log" aria-live="polite" aria-relevant="additions">
-            {messages.map(message => <div key={message.id} className={`advisor-message ${message.role}`}>
-              <span className="advisor-avatar" aria-hidden="true">{message.role === 'assistant' ? <AdvisorBotIcon/> : <AdvisorUserIcon/>}</span>
-              <div className="advisor-message-body"><div className="advisor-bubble"><p>{message.content}</p></div><time>{message.timestamp}</time></div>
-            </div>)}
-            {sending && <div className="advisor-message assistant advisor-thinking"><span className="advisor-avatar" aria-hidden="true"><AdvisorBotIcon/></span><div className="advisor-message-body"><div className="advisor-bubble"><p><span>UTOMIC is thinking…</span><i/><i/><i/></p></div></div></div>}
-            {error && <div className="advisor-message assistant advisor-failure" role="alert"><span className="advisor-avatar" aria-hidden="true"><AdvisorBotIcon/></span><div className="advisor-message-body"><div className="advisor-bubble"><p>{error}</p><button type="button" onClick={() => retryMessages && requestConversation(retryMessages)} disabled={sending || !retryMessages}>Try again</button></div></div></div>}
+      <Reveal className="section-heading split-heading"><div><SectionTitle light>What we do</SectionTitle><h2>Smart systems for digital growth.</h2></div><p>From intelligent workflows to premium interfaces, every system is shaped around clarity, usefulness and scale.</p></Reveal>
+      <div className="service-list">{services.map((s,i) => {
+        return <article className="service-row service-row-enquiry" key={s[0]}>
+          <button type="button" className="service-row-button" data-service={s[0]} onClick={openServiceEnquiry} aria-label={`Start a ${s[0].toLowerCase()} project enquiry`}>
+            <span className="service-number">0{i+1}</span><span className="service-title">{s[0]}</span><span className="service-description">{s[1]}</span><span className="service-thumb"><img src={`${A}${s[2]}`} alt="" /></span><Arrow /><span className="service-start">START A PROJECT <Arrow /></span>
+          </button>
+        </article>
+      })}</div>
+    </div>
+  </section>
+}
+
+function DigitalExperiencesMotion({ onStartProject }) {
+  const [showClosingBrand, setShowClosingBrand] = useState(false)
+
+  const syncClosingBrand = event => {
+    const { currentTime, duration } = event.currentTarget
+    const shouldShow = Number.isFinite(duration) && duration - currentTime <= 2.35
+    setShowClosingBrand(current => current === shouldShow ? current : shouldShow)
+  }
+
+  return <section id="motion-experiences" className="section motion-experience dark-section">
+    <div className="motion-experience-grid" aria-hidden="true"/>
+    <div className="motion-experience-aura motion-aura-left" aria-hidden="true"/>
+    <div className="motion-experience-aura motion-aura-right" aria-hidden="true"/>
+    <div className="container">
+      <Reveal className="motion-experience-heading">
+        <div className="motion-experience-label"><i/>DIGITAL EXPERIENCES</div>
+        <h2><span>WE BUILD</span><span>WHAT <em>MOVES.</em></span></h2>
+        <p>UTOMIC creates intelligent digital systems, modern web experiences and interactive products designed to feel seamless, immersive and memorable.</p>
+      </Reveal>
+
+      <Reveal className="motion-showcase">
+        <div className="motion-showcase-rail" aria-hidden="true"><span>UTOMIC / MOTION-LED EXPERIENCE</span><span>01 — 01</span></div>
+        <div className="motion-stage">
+          <div className="motion-stage-orbits" aria-hidden="true"><i/><i/><i/></div>
+          <div className="motion-stage-mark motion-stage-mark-left" aria-hidden="true">INTELLIGENT<br/>DIGITAL<br/>SYSTEMS</div>
+          <div className="motion-video-wrap">
+            <video autoPlay muted loop playsInline preload="metadata" onTimeUpdate={syncClosingBrand} aria-label="UTOMIC digital experiences motion showcase">
+              <source src={`${A}utomic-digital-experiences-final.mp4`} type="video/mp4"/>
+            </video>
+            <div className={`motion-closing-brand ${showClosingBrand ? 'is-visible' : ''}`} aria-hidden={!showClosingBrand}>
+              <strong>UTOMIC</strong><span>SHEHAN.XYZ</span>
+            </div>
           </div>
-          <div className="advisor-composer">
-            <label className="sr-only" htmlFor="advisor-input">Ask UTOMIC anything</label>
-            <span className="composer-plus" aria-hidden="true">+</span>
-            <textarea id="advisor-input" value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={handleKeyDown} placeholder="Ask UTOMIC anything…" rows="1" maxLength="2000" disabled={sending}/>
-            <span className="composer-mic" aria-hidden="true"><MicrophoneIcon/></span>
-            <button type="button" onClick={sendMessage} disabled={sending || !draft.trim()} aria-label="Send message"><PaperPlaneIcon/></button>
-          </div>
-          <p className="advisor-hint">ENTER TO SEND <i/> SHIFT + ENTER FOR A NEW LINE</p>
+          <div className="motion-stage-mark motion-stage-mark-right" aria-hidden="true">AI-POWERED<br/>MOTION-LED<br/>EXPERIENCES</div>
         </div>
       </Reveal>
-    </div>
-  </section>
-}
 
-const controlFeatures = [
-  ['REAL-TIME SYSTEM CONTROL','Monitor connected workflows and system states through responsive digital interfaces.'],
-  ['SEAMLESS DEVICE ACCESS','Design experiences that work cleanly across desktop, tablet and mobile.'],
-  ['UNIFIED DIGITAL INTERFACE','Bring connected tools, automation and information into one organized experience.']
-]
-
-function AIControl() {
-  return <section className="section control dark-section">
-    <div className="container">
-      <Reveal><SectionTitle light>Real-time AI control</SectionTitle><div className="control-title"><h2>YOUR INTELLIGENT<br/>DIGITAL CONTROL<br/>SYSTEM</h2><p>Manage connected workflows, digital systems and intelligent tools through one thoughtfully designed interface.</p></div></Reveal>
-      <div className="control-layout">
-        <div className="dashboard" aria-label="Conceptual UTOMIC control dashboard">
-          <div className="dash-head"><span>UTOMIC / CONTROL</span><i>LIVE</i></div>
-          <div className="dash-body"><aside><b>Overview</b><span>Systems</span><span>Automation</span><span>Activity</span></aside><main><div className="signal"><i/><i/><i/><i/><i/><i/></div><div className="dash-stats"><span><small>CONNECTED</small><b>06</b></span><span><small>STATUS</small><b>SYNC</b></span></div><div className="dash-lines"><i/><i/><i/><i/></div></main></div>
-          <div className="dash-glow" />
-        </div>
-        <div className="control-features">{controlFeatures.map((f,i)=><article key={f[0]}><span>0{i+1}</span><div><h3>{f[0]}</h3><p>{f[1]}</p></div><Arrow /></article>)}</div>
-      </div>
-    </div>
-  </section>
-}
-
-function Approach() {
-  const items = [['PRECISION','Every detail should serve a clear purpose.'],['CLARITY','Complex technology made understandable and usable.'],['PERFORMANCE','Fast, responsive systems engineered with care.'],['ADAPTABILITY','A foundation designed to evolve with new requirements.']]
-  return <section className="section approach light-section">
-    <div className="container"><Reveal><SectionTitle>Our approach</SectionTitle><h2 className="approach-heading">Principles behind every system we shape.</h2></Reveal>
-      <div className="approach-grid">{items.map((x,i)=><article key={x[0]}><span>0{i+1}</span><div className="approach-orb"/><h3>{x[0]}</h3><p>{x[1]}</p></article>)}</div>
+      <Reveal className="motion-capabilities" aria-label="UTOMIC digital capabilities">
+        <button type="button" className="motion-capability-trigger" onClick={event => onStartProject('ai-systems', event.currentTarget)}>AI SYSTEMS <b aria-hidden="true">START A PROJECT ↗</b></button><i aria-hidden="true"/><button type="button" className="motion-capability-trigger" onClick={event => onStartProject('modern-web-apps', event.currentTarget)}>MODERN WEB APPS <b aria-hidden="true">START A PROJECT ↗</b></button><i aria-hidden="true"/><button type="button" className="motion-capability-trigger" onClick={event => onStartProject('digital-experiences', event.currentTarget)}>DIGITAL EXPERIENCES <b aria-hidden="true">START A PROJECT ↗</b></button>
+      </Reveal>
     </div>
   </section>
 }
 
 const posts = [
-  ['AI SYSTEMS','Designing adaptive AI experiences','How thoughtful interfaces turn complex intelligence into useful everyday systems.','VvXYLjuXjahLhon17evFYZRJs.jpg'],
-  ['AI AUTOMATION','Building smarter connected workflows','A practical look at removing friction across repetitive digital operations.','BpAF2774xoJbRQ4ujlnLzGL8k4.jpg'],
-  ['WEB PERFORMANCE','Why speed is part of the experience','Modern applications feel better when performance is treated as a design material.','l51U3EbbK6HMdM7pW8qOuQqKo.jpg']
+  ['AI SYSTEMS','Designing adaptive AI experiences','How thoughtful interfaces turn complex intelligence into useful everyday systems.','VvXYLjuXjahLhon17evFYZRJs.jpg','ai-systems'],
+  ['AI AUTOMATION','Building smarter connected workflows','A practical look at removing friction across repetitive digital operations.','BpAF2774xoJbRQ4ujlnLzGL8k4.jpg','ai-systems'],
+  ['WEB PERFORMANCE','Why speed is part of the experience','Modern applications feel better when performance is treated as a design material.','l51U3EbbK6HMdM7pW8qOuQqKo.jpg','modern-web-apps']
 ]
 
-function Insights() {
+function Insights({ onStartProject }) {
   return <section id="insights" className="section insights light-section"><div className="container">
     <Reveal className="section-heading split-heading"><div><SectionTitle>Insights</SectionTitle><h2>Insights shaping smarter digital growth.</h2></div><p>Original perspectives on AI systems, modern development, product design and creative technology.</p></Reveal>
-    <div className="post-grid">{posts.map((p,i)=><article key={p[1]}><div className="post-image"><img src={`${A}${p[3]}`} alt=""/><span>{p[0]}</span></div><div className="post-meta"><small>0{i+1} / UTOMIC NOTE</small><Arrow /></div><h3>{p[1]}</h3><p>{p[2]}</p></article>)}</div>
+    <div className="post-grid">{posts.map((p,i)=><button type="button" className="post-card" key={p[1]} onClick={event => onStartProject(p[4], event.currentTarget)} aria-label={`${p[1]} — start a related project`}><div className="post-image"><img src={`${A}${p[3]}`} alt=""/><span>{p[0]}</span></div><div className="post-meta"><small>0{i+1} / UTOMIC NOTE</small><Arrow /></div><h3>{p[1]}</h3><p>{p[2]}</p></button>)}</div>
   </div></section>
 }
 
-function Footer() {
+function Footer({ onStartProject }) {
   return <footer id="contact" className="footer dark-section">
     <div className="footer-glow"/><div className="container">
-      <Reveal className="footer-cta"><SectionTitle light>Start something intelligent</SectionTitle><h2>BUILD WHAT SCALES<br/>BEYOND LIMITS</h2><div><p>Create smarter systems, modern digital experiences and scalable technology designed for long-term growth.</p><Button light href="mailto:sheehansheehan120@gmail.com?subject=Let%27s%20build%20with%20UTOMIC">Let's start today</Button></div></Reveal>
+      <Reveal className="footer-cta"><SectionTitle light>Start something intelligent</SectionTitle><h2>BUILD WHAT SCALES<br/>BEYOND LIMITS</h2><div><p>Create smarter systems, modern digital experiences and scalable technology designed for long-term growth.</p><ProjectButton light className="footer-project" onClick={event => onStartProject(null, event.currentTarget)}/></div></Reveal>
       <div className="footer-main">
         <div><a className="brand brand-footer" href="#home"><span className="brand-mark">U</span>UTOMIC</a><p>AI SYSTEMS &amp; MODERN WEB APPS</p></div>
-        <nav>{['Home','About','Services'].map(x=><a key={x} href={`#${x.toLowerCase()}`}>{x}</a>)}</nav>
-        <div className="contact-list"><span>GET IN TOUCH</span><a href="mailto:sheehansheehan120@gmail.com">sheehansheehan120@gmail.com</a><a href="https://wa.me/94706610373" target="_blank" rel="noreferrer">070 661 0373</a><a href="https://instagram.com/shehan66629" target="_blank" rel="noreferrer">@shehan66629</a></div>
+        <nav>{['Home','About','Services','Contact'].map(x=><a key={x} href={`#${x.toLowerCase()}`}>{x}</a>)}</nav>
+        <div className="contact-list"><span>START A PROJECT</span><a href="https://www.instagram.com/shehan66629/" target="_blank" rel="noopener noreferrer"><InstagramIcon/>@shehan66629</a><a href="https://wa.me/94706610373?text=Hi%20UTOMIC%2C%20I%27d%20like%20to%20discuss%20a%20project." target="_blank" rel="noopener noreferrer"><WhatsAppIcon/>+94 70 661 0373</a><a href="mailto:sheehansheehan120@gmail.com"><EmailIcon/>sheehansheehan120@gmail.com</a></div>
       </div>
       <div className="footer-word">UTOMIC</div>
       <div className="copyright"><span>© {new Date().getFullYear()} UTOMIC</span><span>AI SYSTEMS &amp; MODERN WEB APPS</span><a href="#home">BACK TO TOP ↑</a></div>
@@ -444,5 +409,14 @@ function Footer() {
 }
 
 export default function App() {
-  return <><Navigation/><main><Hero/><About/><CapabilityTicker/><Systems/><Services/><Pricing/><AIAdvisor/><AIControl/><Approach/><Insights/></main><Footer/></>
+  const [enquiryOpen, setEnquiryOpen] = useState(false)
+  const [initialService, setInitialService] = useState(null)
+  const enquiryTriggerRef = useRef(null)
+  const openProjectEnquiry = (service, trigger) => {
+    enquiryTriggerRef.current = trigger
+    setInitialService(service)
+    setEnquiryOpen(true)
+  }
+  const closeProjectEnquiry = () => setEnquiryOpen(false)
+  return <><Navigation onStartProject={openProjectEnquiry}/><main><Hero/><About/><CapabilityTicker/><Systems/><Services onStartProject={openProjectEnquiry}/><DigitalExperiencesMotion onStartProject={openProjectEnquiry}/><Insights onStartProject={openProjectEnquiry}/></main><Footer onStartProject={openProjectEnquiry}/>{enquiryOpen && <ProjectEnquiry initialService={initialService} onClose={closeProjectEnquiry} triggerRef={enquiryTriggerRef}/>}</>
 }

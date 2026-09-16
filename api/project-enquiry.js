@@ -31,6 +31,29 @@ const safeMessage = (value, maxLength) => textValue(value)
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
+function readConfiguration() {
+  const apiKey = textValue(process.env.RESEND_API_KEY)
+  const notificationEmail = textValue(process.env.PROJECT_NOTIFICATION_EMAIL)
+  const fromEmail = textValue(process.env.PROJECT_FROM_EMAIL)
+  const senderAddress = fromEmail.match(/<([^>]+)>/)?.[1] || fromEmail
+  const missing = []
+  const invalid = []
+
+  if (!apiKey) missing.push('RESEND_API_KEY')
+  if (!notificationEmail) missing.push('PROJECT_NOTIFICATION_EMAIL')
+  else if (!emailPattern.test(notificationEmail)) invalid.push('PROJECT_NOTIFICATION_EMAIL')
+  if (!fromEmail) missing.push('PROJECT_FROM_EMAIL')
+  else if (!emailPattern.test(senderAddress)) invalid.push('PROJECT_FROM_EMAIL')
+
+  if (missing.length || invalid.length) {
+    const details = [...missing.map(name => `${name}=missing`), ...invalid.map(name => `${name}=invalid`)]
+    console.error(`[project-enquiry] configuration check failed: ${details.join(', ')}`)
+    return null
+  }
+
+  return { apiKey, notificationEmail, fromEmail }
+}
+
 function clientAddress(request) {
   const forwarded = request.headers['x-forwarded-for']
   if (Array.isArray(forwarded)) return forwarded[0] || 'unknown'
@@ -104,12 +127,12 @@ export default async function handler(request, response) {
   const validation = validate(body)
   if (validation.error) return response.status(400).json({ error: validation.error })
 
-  const apiKey = process.env.RESEND_API_KEY
-  const notificationEmail = process.env.PROJECT_NOTIFICATION_EMAIL
-  const fromEmail = process.env.PROJECT_FROM_EMAIL
-  if (!apiKey || !notificationEmail || !fromEmail) {
+  const configuration = readConfiguration()
+  if (!configuration) {
     return response.status(503).json({ error: 'Project enquiries are temporarily unavailable. Please try again later.' })
   }
+
+  const { apiKey, notificationEmail, fromEmail } = configuration
 
   const { projectType, name, email, phone, projectName, description, goal, scope } = validation.value
   const submittedAt = new Date().toISOString()
